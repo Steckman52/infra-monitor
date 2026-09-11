@@ -1,0 +1,6 @@
+{
+  "name": "shared-dep-service-c",
+  "dependencies": {
+    "moment": "workspace:*"
+  }
+}

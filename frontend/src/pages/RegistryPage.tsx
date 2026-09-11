@@ -6,9 +6,10 @@ import { listServices, type ScanResponse, type ServiceSummary } from '../service
 interface RegistryPageProps {
   onSelectService: (id: number) => void;
   onViewScanIssues: () => void;
+  onViewCompatibility: () => void;
 }
 
-function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) {
+function RegistryPage({ onSelectService, onViewScanIssues, onViewCompatibility }: RegistryPageProps) {
   const [services, setServices] = useState<ServiceSummary[]>([]);
   const [lastScanSummary, setLastScanSummary] = useState<ScanResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -37,6 +38,9 @@ function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) 
       <h1>Service Registry</h1>
       <button type="button" onClick={onViewScanIssues}>
         View scan issues
+      </button>
+      <button type="button" onClick={onViewCompatibility}>
+        View dependency compatibility
       </button>
       <ScanButton onScanComplete={handleScanComplete} />
       {lastScanSummary && (

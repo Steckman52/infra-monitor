@@ -24,8 +24,8 @@ Principle V, same as feature 001.
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 [P] Add `PyYAML` to `backend/requirements.txt` (MIT-licensed, per constitution Principle VII; used via `yaml.safe_load` only, per research.md §2)
-- [ ] T002 [P] Create a `docker-compose.yml` fixture scaffold at `backend/tests/integration/fixtures/compose/`: a valid file declaring two services on a shared network, one `depends_on` relationship, and one service using `image:` only (no `build:`); plus one syntactically invalid `docker-compose.yml`
+- [X] T001 [P] Add `PyYAML` to `backend/requirements.txt` (MIT-licensed, per constitution Principle VII; used via `yaml.safe_load` only, per research.md §2)
+- [X] T002 [P] Create a `docker-compose.yml` fixture scaffold at `backend/tests/integration/fixtures/compose/`: a valid file declaring two services on a shared network, one `depends_on` relationship, and one service using `image:` only (no `build:`); plus one syntactically invalid `docker-compose.yml`
 
 ---
 
@@ -49,19 +49,19 @@ compatibility view distinguishes all three states.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T003 [P] [US1] Unit test for major-version extraction in `backend/tests/unit/test_version_extraction.py` per research.md §7: `^4.18.0`→4, `~1.5.0`→1, `>=2.31.0`→2, `v1.9.1`→1, `5.3.20`→5, `${hamcrestVersion}`→not comparable
-- [ ] T004 [P] [US1] Unit test for compatibility grouping/status logic in `backend/tests/unit/test_compatibility_grouping.py` per data-model.md: same-major → `compatible`; differing major → `compatibility_risk`; a not-comparable entry sets `has_not_comparable` independently of the status among the rest (Edge Case); a dependency used by only one service is excluded (FR-001)
-- [ ] T005 [P] [US1] Contract test for `GET /api/dependency-compatibility` in `backend/tests/contract/test_compatibility_endpoint.py` per contracts/api.md
-- [ ] T006 [US1] Integration test in `backend/tests/integration/test_compatibility.py`: scan a fixture tree containing two services sharing a dependency at different major versions and one service with a not-comparable version, then verify the computed compatibility list matches Acceptance Scenarios 1-4
+- [X] T003 [P] [US1] Unit test for major-version extraction in `backend/tests/unit/test_version_extraction.py` per research.md §7: `^4.18.0`→4, `~1.5.0`→1, `>=2.31.0`→2, `v1.9.1`→1, `5.3.20`→5, `${hamcrestVersion}`→not comparable
+- [X] T004 [P] [US1] Unit test for compatibility grouping/status logic in `backend/tests/unit/test_compatibility_grouping.py` per data-model.md: same-major → `compatible`; differing major → `compatibility_risk`; a not-comparable entry sets `has_not_comparable` independently of the status among the rest (Edge Case); a dependency used by only one service is excluded (FR-001)
+- [X] T005 [P] [US1] Contract test for `GET /api/dependency-compatibility` in `backend/tests/contract/test_compatibility_endpoint.py` per contracts/api.md
+- [X] T006 [US1] Integration test in `backend/tests/integration/test_compatibility.py`: scan a fixture tree containing two services sharing a dependency at different major versions and one service with a not-comparable version, then verify the computed compatibility list matches Acceptance Scenarios 1-4
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implement `extract_major_version()` in `backend/src/analysis/version_compatibility.py` per research.md §7
-- [ ] T008 [US1] Implement `compute_compatibility(session)` in the same file, grouping `Dependency` rows by `(ecosystem, name)` across `Service`, per data-model.md's computed shape (depends on T007)
-- [ ] T009 [US1] Implement `GET /api/dependency-compatibility` in `backend/src/api/compatibility.py` per contracts/api.md, register its router in `backend/src/main.py` (depends on T008)
-- [ ] T010 [P] [US1] Implement frontend API client function `listCompatibility()` in `frontend/src/services/api.ts` per contracts/api.md
-- [ ] T011 [P] [US1] Implement `CompatibilityTable` component in `frontend/src/components/CompatibilityTable.tsx`
-- [ ] T012 [US1] Implement `CompatibilityPage` in `frontend/src/pages/CompatibilityPage.tsx` and add a navigation entry from `RegistryPage` (depends on T010, T011)
+- [X] T007 [US1] Implement `extract_major_version()` in `backend/src/analysis/version_compatibility.py` per research.md §7
+- [X] T008 [US1] Implement `compute_compatibility(session)` in the same file, grouping `Dependency` rows by `(ecosystem, name)` across `Service`, per data-model.md's computed shape (depends on T007)
+- [X] T009 [US1] Implement `GET /api/dependency-compatibility` in `backend/src/api/compatibility.py` per contracts/api.md, register its router in `backend/src/main.py` (depends on T008)
+- [X] T010 [P] [US1] Implement frontend API client function `listCompatibility()` in `frontend/src/services/api.ts` per contracts/api.md
+- [X] T011 [P] [US1] Implement `CompatibilityTable` component in `frontend/src/components/CompatibilityTable.tsx`
+- [X] T012 [US1] Implement `CompatibilityPage` in `frontend/src/pages/CompatibilityPage.tsx` and add a navigation entry from `RegistryPage` (depends on T010, T011)
 
 **Checkpoint**: User Story 1 is independently functional — this is the MVP for this feature.
 

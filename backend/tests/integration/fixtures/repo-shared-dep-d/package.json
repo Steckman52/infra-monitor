@@ -1,0 +1,6 @@
+{
+  "name": "shared-dep-service-d",
+  "dependencies": {
+    "moment": "^2.10.0"
+  }
+}

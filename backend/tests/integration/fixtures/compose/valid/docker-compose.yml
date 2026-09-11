@@ -1,0 +1,18 @@
+services:
+  api:
+    build: ../../repo-node
+    networks:
+      - backend-net
+    depends_on:
+      - cache
+      - db
+  worker:
+    build: ../../repo-go
+    networks:
+      - backend-net
+  db:
+    image: postgres:15
+    networks:
+      - backend-net
+  cache:
+    image: redis:7

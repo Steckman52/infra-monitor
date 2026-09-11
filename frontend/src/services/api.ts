@@ -33,6 +33,21 @@ export interface ScanIssue {
   detected_at: string;
 }
 
+export interface CompatibilityEntry {
+  service_id: number;
+  service_name: string;
+  declared_version: string | null;
+  major_version: number | null;
+}
+
+export interface CompatibilityGroup {
+  name: string;
+  ecosystem: string;
+  status: 'compatible' | 'compatibility_risk';
+  has_not_comparable: boolean;
+  entries: CompatibilityEntry[];
+}
+
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -62,4 +77,9 @@ export async function getServiceDetail(id: number): Promise<ServiceDetail> {
 export async function listScanIssues(): Promise<ScanIssue[]> {
   const response = await fetch('/api/scan-issues');
   return parseJsonOrThrow<ScanIssue[]>(response);
+}
+
+export async function listCompatibility(): Promise<CompatibilityGroup[]> {
+  const response = await fetch('/api/dependency-compatibility');
+  return parseJsonOrThrow<CompatibilityGroup[]>(response);
 }

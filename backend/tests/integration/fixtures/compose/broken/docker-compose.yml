@@ -1,0 +1,4 @@
+services:
+  api:
+    build: ../../repo-node
+    networks: [backend-net

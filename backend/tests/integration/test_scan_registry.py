@@ -1,11 +1,31 @@
 from src.models.service import Service
 from src.scanning.scan_service import run_scan
 
+# Explicit list, not "the whole fixtures dir": other features (e.g.
+# 002-dependency-map) add their own fixture repos to this same shared
+# fixtures directory, and this test's expected counts must stay decoupled
+# from that.
+FEATURE_1_FIXTURE_DIRS = [
+    "repo-node",
+    "repo-java",
+    "repo-python",
+    "repo-go",
+    "repo-php",
+    "repo-no-deps",
+    "repo-incomplete-java",
+    "repo-monorepo",
+    "repo-with-vendor",
+    "repo-collision-a",
+    "repo-collision-b",
+    "repo-broken",
+]
+
 
 def test_full_scan_produces_expected_registry(db_session, fixtures_dir):
+    roots = [str(fixtures_dir / name) for name in FEATURE_1_FIXTURE_DIRS]
     missing_root = str(fixtures_dir / "does-not-exist")
 
-    summary = run_scan(db_session, [str(fixtures_dir), missing_root])
+    summary = run_scan(db_session, [*roots, missing_root])
 
     # 12 manifests produce a service: repo-node, repo-java, repo-python, repo-go,
     # repo-php, repo-no-deps, repo-incomplete-java (incomplete but still a
