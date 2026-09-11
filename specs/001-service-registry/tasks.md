@@ -33,7 +33,7 @@ Web application layout per plan.md: `backend/src/`, `backend/tests/`, `frontend/
 - [ ] T001 Create the `backend/` and `frontend/` directory skeleton per plan.md Project Structure: `backend/src/{models,scanning,scanning/parsers,api}`, `backend/tests/{unit,contract,integration}`, `frontend/src/{components,pages,services}`, `frontend/tests`
 - [ ] T002 Initialize the Python backend project in `backend/` (`pyproject.toml` or `requirements.txt`) with dependencies: `fastapi`, `pydantic`, `sqlalchemy`, `uvicorn`, `pytest`, `httpx` (for the FastAPI test client) — all MIT/BSD-licensed per constitution Principle VII
 - [ ] T003 [P] Initialize the React frontend project in `frontend/` (`package.json`) with React 18 and a standard SPA build tool
-- [ ] T004 [P] Create the fixture repository tree at `backend/tests/integration/fixtures/` containing: one valid manifest of each of the five supported types, one syntactically invalid `package.json`, one `pom.xml` missing `artifactId`, and a `node_modules/` subfolder containing a decoy `package.json` (to verify exclusion per FR-006)
+- [ ] T004 [P] Create the fixture repository tree at `backend/tests/integration/fixtures/` containing: one valid manifest of each of the five supported types, one syntactically invalid `package.json`, one `pom.xml` missing `artifactId`, a `node_modules/` subfolder containing a decoy `package.json` (to verify exclusion per FR-006), and two `package.json` manifests in different subfolders that would derive the same name (no explicit `name` field, identical parent-directory name) to exercise the FR-004 rule-3 collision suffix end-to-end (SC-006)
 
 ---
 
@@ -75,7 +75,7 @@ entries, and an unreachable root is reported without aborting the rest.
 - [ ] T016 [P] [US1] Unit test for the name-resolution chain in `backend/tests/unit/test_name_resolution.py` per FR-004: explicit manifest field takes priority; parent-directory name is used when no field exists (e.g., `requirements.txt`); a repository-path-derived suffix is appended when two services would otherwise collide
 - [ ] T017 [P] [US1] Contract test for `POST /api/scan` in `backend/tests/contract/test_scan_endpoint.py` against the request/response shape in contracts/api.md
 - [ ] T018 [P] [US1] Contract test for `GET /api/services` in `backend/tests/contract/test_services_list_endpoint.py` against contracts/api.md
-- [ ] T019 [US1] Integration test in `backend/tests/integration/test_scan_registry.py` running a full scan against the fixture tree (T004), asserting: one service per valid manifest (SC-001), a monorepo produces multiple entries (Acceptance Scenario 2), an unreachable root path is reported without aborting the scan of valid ones (Acceptance Scenario 4, FR-010), and `node_modules` contents are excluded (FR-006)
+- [ ] T019 [US1] Integration test in `backend/tests/integration/test_scan_registry.py` running a full scan against the fixture tree (T004), asserting: one service per valid manifest (SC-001), a monorepo produces multiple entries (Acceptance Scenario 2), an unreachable root path is reported without aborting the scan of valid ones (Acceptance Scenario 4, FR-010), `node_modules` contents are excluded (FR-006), and the two same-named fixture manifests both appear in the registry as distinct entries disambiguated by a repository-path-derived suffix (FR-004 rule 3, SC-006)
 
 ### Implementation for User Story 1
 
@@ -133,7 +133,7 @@ fixing one and re-scanning removes it from the list.
 ### Tests for User Story 3 ⚠️
 
 - [ ] T039 [P] [US3] Contract test for `GET /api/scan-issues` in `backend/tests/contract/test_scan_issues_endpoint.py` per contracts/api.md
-- [ ] T040 [US3] Integration test in `backend/tests/integration/test_scan_issues.py` asserting: an invalid manifest produces an `issue_type="unparsable"` entry with a specific reason and no service (Acceptance Scenario 1); a `pom.xml` missing `artifactId` produces a service with `is_complete=false` plus a linked `issue_type="incomplete_data"` entry (Acceptance Scenario 2); fixing the manifest and re-scanning removes the resolved issue (Acceptance Scenario 3, SC-005)
+- [ ] T040 [US3] Integration test in `backend/tests/integration/test_scan_issues.py` asserting: an invalid manifest produces an `issue_type="unparsable"` entry with a specific reason and no service (Acceptance Scenario 1); a `pom.xml` missing `artifactId` produces a service with `is_complete=false` plus a linked `issue_type="incomplete_data"` entry (Acceptance Scenario 2); fixing the manifest and re-scanning removes the resolved issue (Acceptance Scenario 3, SC-005); and, separately, adding a brand-new manifest to the fixture tree before a re-scan makes it appear as a new service while deleting a previously-scanned manifest before a re-scan makes its service and dependencies disappear (FR-014 add/remove sub-cases, SC-005)
 
 ### Implementation for User Story 3
 
@@ -151,7 +151,7 @@ fixing one and re-scanning removes it from the list.
 - [ ] T045 [P] Author the dogfooding ADRs identified in plan.md's Complexity Tracking as plain MADR files: `docs/adr/0001-sqlite-over-server-db.md`, `docs/adr/0002-sqlalchemy-orm.md`, `docs/adr/0003-rescan-delete-and-repopulate.md` (Constitution Principle VI)
 - [ ] T046 [P] Write `backend/README.md` and `frontend/README.md` covering each module's purpose, public interface, and run instructions (Constitution Principle VI)
 - [ ] T047 Add a performance integration test in `backend/tests/integration/test_scan_performance.py` asserting a scan of ~500 generated manifests completes in under 30 seconds (plan.md Performance Goals)
-- [ ] T048 Run the quickstart.md validation end-to-end and record the result
+- [ ] T048 Run the quickstart.md validation end-to-end, record the result, and confirm no manual create/edit affordance for a service entry exists anywhere in the API or frontend (FR-015)
 
 ---
 
