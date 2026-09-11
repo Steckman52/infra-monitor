@@ -1,0 +1,7 @@
+<project>
+  <groupId>com.example</groupId>
+  <packaging>pom</packaging>
+  <modules>
+    <module>service-a</module>
+  </modules>
+</project>

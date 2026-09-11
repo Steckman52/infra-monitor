@@ -1,0 +1,7 @@
+{
+  "name": "example/billing-service",
+  "require": {
+    "php": ">=8.1",
+    "monolog/monolog": "^3.0"
+  }
+}

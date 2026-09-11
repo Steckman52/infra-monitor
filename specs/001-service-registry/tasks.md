@@ -30,10 +30,10 @@ Web application layout per plan.md: `backend/src/`, `backend/tests/`, `frontend/
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create the `backend/` and `frontend/` directory skeleton per plan.md Project Structure: `backend/src/{models,scanning,scanning/parsers,api}`, `backend/tests/{unit,contract,integration}`, `frontend/src/{components,pages,services}`, `frontend/tests`
-- [ ] T002 Initialize the Python backend project in `backend/` (`pyproject.toml` or `requirements.txt`) with dependencies: `fastapi`, `pydantic`, `sqlalchemy`, `uvicorn`, `pytest`, `httpx` (for the FastAPI test client) — all MIT/BSD-licensed per constitution Principle VII
-- [ ] T003 [P] Initialize the React frontend project in `frontend/` (`package.json`) with React 18 and a standard SPA build tool
-- [ ] T004 [P] Create the fixture repository tree at `backend/tests/integration/fixtures/` containing: one valid manifest of each of the five supported types, one syntactically invalid `package.json`, one `pom.xml` missing `artifactId`, a `node_modules/` subfolder containing a decoy `package.json` (to verify exclusion per FR-006), and two `package.json` manifests in different subfolders that would derive the same name (no explicit `name` field, identical parent-directory name) to exercise the FR-004 rule-3 collision suffix end-to-end (SC-006)
+- [X] T001 Create the `backend/` and `frontend/` directory skeleton per plan.md Project Structure: `backend/src/{models,scanning,scanning/parsers,api}`, `backend/tests/{unit,contract,integration}`, `frontend/src/{components,pages,services}`, `frontend/tests`
+- [X] T002 Initialize the Python backend project in `backend/` (`pyproject.toml` or `requirements.txt`) with dependencies: `fastapi`, `pydantic`, `sqlalchemy`, `uvicorn`, `pytest`, `httpx` (for the FastAPI test client) — all MIT/BSD-licensed per constitution Principle VII
+- [X] T003 [P] Initialize the React frontend project in `frontend/` (`package.json`) with React 18 and a standard SPA build tool
+- [X] T004 [P] Create the fixture repository tree at `backend/tests/integration/fixtures/` containing: one valid manifest of each of the five supported types, one syntactically invalid `package.json`, one `pom.xml` missing `artifactId`, a `node_modules/` subfolder containing a decoy `package.json` (to verify exclusion per FR-006), and two `package.json` manifests in different subfolders that would derive the same name (no explicit `name` field, identical parent-directory name) to exercise the FR-004 rule-3 collision suffix end-to-end (SC-006)
 
 ---
 
@@ -43,12 +43,12 @@ Web application layout per plan.md: `backend/src/`, `backend/tests/`, `frontend/
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Configure the SQLite engine/session in `backend/src/db.py`, pointing at a single local file (e.g. `data/registry.db`) per plan.md Storage — no external DB server
-- [ ] T006 [P] Create the `Service` SQLAlchemy model in `backend/src/models/service.py` per data-model.md: `id` PK autoincrement; `name` text not null; `ecosystem` text not null, one of `node`/`java`/`python`/`go`/`php`; `repository_path` text not null; `manifest_path` text not null unique; `is_complete` boolean not null default `true`; `last_scanned_at` datetime not null
-- [ ] T007 [P] Create the `Dependency` SQLAlchemy model in `backend/src/models/dependency.py` per data-model.md: `id` PK autoincrement; `service_id` FK → `Service.id` not null, `ON DELETE CASCADE`; `name` text not null; `declared_version` text nullable
-- [ ] T008 [P] Create the `ScanIssue` SQLAlchemy model in `backend/src/models/scan_issue.py` per data-model.md: `id` PK autoincrement; `manifest_path` text not null; `repository_path` text not null; `issue_type` text not null, one of `unparsable`/`incomplete_data`/`unreachable_path`; `reason` text not null; `service_id` FK → `Service.id` nullable, `ON DELETE CASCADE`; `detected_at` datetime not null
-- [ ] T009 Implement the directory-walk utility with exclusion pruning in `backend/src/scanning/walker.py`, using `os.walk(topdown=True)` and pruning `node_modules`, `vendor`, `target`, `.venv`, `site-packages`, `__pycache__`, `.git` from `dirnames` in place per research.md §5
-- [ ] T010 Create the FastAPI app skeleton and router registration in `backend/src/main.py`
+- [X] T005 Configure the SQLite engine/session in `backend/src/db.py`, pointing at a single local file (e.g. `data/registry.db`) per plan.md Storage — no external DB server
+- [X] T006 [P] Create the `Service` SQLAlchemy model in `backend/src/models/service.py` per data-model.md: `id` PK autoincrement; `name` text not null; `ecosystem` text not null, one of `node`/`java`/`python`/`go`/`php`; `repository_path` text not null; `manifest_path` text not null unique; `is_complete` boolean not null default `true`; `last_scanned_at` datetime not null
+- [X] T007 [P] Create the `Dependency` SQLAlchemy model in `backend/src/models/dependency.py` per data-model.md: `id` PK autoincrement; `service_id` FK → `Service.id` not null, `ON DELETE CASCADE`; `name` text not null; `declared_version` text nullable
+- [X] T008 [P] Create the `ScanIssue` SQLAlchemy model in `backend/src/models/scan_issue.py` per data-model.md: `id` PK autoincrement; `manifest_path` text not null; `repository_path` text not null; `issue_type` text not null, one of `unparsable`/`incomplete_data`/`unreachable_path`; `reason` text not null; `service_id` FK → `Service.id` nullable, `ON DELETE CASCADE`; `detected_at` datetime not null
+- [X] T009 Implement the directory-walk utility with exclusion pruning in `backend/src/scanning/walker.py`, using `os.walk(topdown=True)` and pruning `node_modules`, `vendor`, `target`, `.venv`, `site-packages`, `__pycache__`, `.git` from `dirnames` in place per research.md §5
+- [X] T010 Create the FastAPI app skeleton and router registration in `backend/src/main.py`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
@@ -67,31 +67,31 @@ entries, and an unreachable root is reported without aborting the rest.
 
 > Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T011 [P] [US1] Unit test for the `package.json` parser in `backend/tests/unit/test_parser_package_json.py`: name comes from the `name` field; dependencies and their declared versions are extracted verbatim
-- [ ] T012 [P] [US1] Unit test for the `pom.xml` parser in `backend/tests/unit/test_parser_pom_xml.py`: name derived from `groupId`/`artifactId`; dependencies extracted from `<dependencies>`
-- [ ] T013 [P] [US1] Unit test for the `requirements.txt` parser in `backend/tests/unit/test_parser_requirements_txt.py`: regex-based line parsing per research.md §3; `-r`/`-e`/environment-marker lines are skipped, not treated as parse failures
-- [ ] T014 [P] [US1] Unit test for the `go.mod` parser in `backend/tests/unit/test_parser_go_mod.py`: name is the last path segment of the `module` directive; `require` entries extracted
-- [ ] T015 [P] [US1] Unit test for the `composer.json` parser in `backend/tests/unit/test_parser_composer_json.py`
-- [ ] T016 [P] [US1] Unit test for the name-resolution chain in `backend/tests/unit/test_name_resolution.py` per FR-004: explicit manifest field takes priority; parent-directory name is used when no field exists (e.g., `requirements.txt`); a repository-path-derived suffix is appended when two services would otherwise collide
-- [ ] T017 [P] [US1] Contract test for `POST /api/scan` in `backend/tests/contract/test_scan_endpoint.py` against the request/response shape in contracts/api.md
-- [ ] T018 [P] [US1] Contract test for `GET /api/services` in `backend/tests/contract/test_services_list_endpoint.py` against contracts/api.md
-- [ ] T019 [US1] Integration test in `backend/tests/integration/test_scan_registry.py` running a full scan against the fixture tree (T004), asserting: one service per valid manifest (SC-001), a monorepo produces multiple entries (Acceptance Scenario 2), an unreachable root path is reported without aborting the scan of valid ones (Acceptance Scenario 4, FR-010), `node_modules` contents are excluded (FR-006), and the two same-named fixture manifests both appear in the registry as distinct entries disambiguated by a repository-path-derived suffix (FR-004 rule 3, SC-006)
+- [X] T011 [P] [US1] Unit test for the `package.json` parser in `backend/tests/unit/test_parser_package_json.py`: name comes from the `name` field; dependencies and their declared versions are extracted verbatim
+- [X] T012 [P] [US1] Unit test for the `pom.xml` parser in `backend/tests/unit/test_parser_pom_xml.py`: name derived from `groupId`/`artifactId`; dependencies extracted from `<dependencies>`
+- [X] T013 [P] [US1] Unit test for the `requirements.txt` parser in `backend/tests/unit/test_parser_requirements_txt.py`: regex-based line parsing per research.md §3; `-r`/`-e`/environment-marker lines are skipped, not treated as parse failures
+- [X] T014 [P] [US1] Unit test for the `go.mod` parser in `backend/tests/unit/test_parser_go_mod.py`: name is the last path segment of the `module` directive; `require` entries extracted
+- [X] T015 [P] [US1] Unit test for the `composer.json` parser in `backend/tests/unit/test_parser_composer_json.py`
+- [X] T016 [P] [US1] Unit test for the name-resolution chain in `backend/tests/unit/test_name_resolution.py` per FR-004: explicit manifest field takes priority; parent-directory name is used when no field exists (e.g., `requirements.txt`); a repository-path-derived suffix is appended when two services would otherwise collide
+- [X] T017 [P] [US1] Contract test for `POST /api/scan` in `backend/tests/contract/test_scan_endpoint.py` against the request/response shape in contracts/api.md
+- [X] T018 [P] [US1] Contract test for `GET /api/services` in `backend/tests/contract/test_services_list_endpoint.py` against contracts/api.md
+- [X] T019 [US1] Integration test in `backend/tests/integration/test_scan_registry.py` running a full scan against the fixture tree (T004), asserting: one service per valid manifest (SC-001), a monorepo produces multiple entries (Acceptance Scenario 2), an unreachable root path is reported without aborting the scan of valid ones (Acceptance Scenario 4, FR-010), `node_modules` contents are excluded (FR-006), and the two same-named fixture manifests both appear in the registry as distinct entries disambiguated by a repository-path-derived suffix (FR-004 rule 3, SC-006)
 
 ### Implementation for User Story 1
 
-- [ ] T020 [P] [US1] Implement the `package.json` parser in `backend/src/scanning/parsers/package_json.py`
-- [ ] T021 [P] [US1] Implement the `pom.xml` parser in `backend/src/scanning/parsers/pom_xml.py`
-- [ ] T022 [P] [US1] Implement the `requirements.txt` parser in `backend/src/scanning/parsers/requirements_txt.py`
-- [ ] T023 [P] [US1] Implement the `go.mod` parser in `backend/src/scanning/parsers/go_mod.py`
-- [ ] T024 [P] [US1] Implement the `composer.json` parser in `backend/src/scanning/parsers/composer_json.py`
-- [ ] T025 [US1] Implement the name-resolution chain in `backend/src/scanning/name_resolution.py` per FR-004 (depends on T020-T024 parser output shape)
-- [ ] T026 [US1] Implement the scan orchestrator in `backend/src/scanning/scan_service.py`: walks each requested root via the T009 walker, dispatches each manifest to its matching parser, isolates per-manifest parse failures so one bad file never stops the scan (FR-007), records a `ScanIssue` row for each unreachable root (`issue_type="unreachable_path"`, FR-010) and each unparsable manifest (`issue_type="unparsable"`, FR-008), marks a service `is_complete=false` and records a linked `ScanIssue` (`issue_type="incomplete_data"`) when a manifest parses but lacks a required field (FR-009), and persists all `Service`/`Dependency`/`ScanIssue` rows inside one transaction that replaces the prior scan's results (research.md §8) (depends on T025, T009, T006-T008)
-- [ ] T027 [US1] Implement `POST /api/scan` in `backend/src/api/scan.py`, returning `{services_found, issues_found, unreachable_roots}` per contracts/api.md (depends on T026)
-- [ ] T028 [US1] Implement `GET /api/services` in `backend/src/api/services.py`, returning the list shape per contracts/api.md
-- [ ] T029 [P] [US1] Implement the frontend API client functions `triggerScan()` and `listServices()` in `frontend/src/services/api.ts` per contracts/api.md
-- [ ] T030 [P] [US1] Implement the `ScanButton` component in `frontend/src/components/ScanButton.tsx`
-- [ ] T031 [P] [US1] Implement the `ServiceTable` component in `frontend/src/components/ServiceTable.tsx`
-- [ ] T032 [US1] Implement `RegistryPage` in `frontend/src/pages/RegistryPage.tsx`, composing `ScanButton` and `ServiceTable` (depends on T029-T031)
+- [X] T020 [P] [US1] Implement the `package.json` parser in `backend/src/scanning/parsers/package_json.py`
+- [X] T021 [P] [US1] Implement the `pom.xml` parser in `backend/src/scanning/parsers/pom_xml.py`
+- [X] T022 [P] [US1] Implement the `requirements.txt` parser in `backend/src/scanning/parsers/requirements_txt.py`
+- [X] T023 [P] [US1] Implement the `go.mod` parser in `backend/src/scanning/parsers/go_mod.py`
+- [X] T024 [P] [US1] Implement the `composer.json` parser in `backend/src/scanning/parsers/composer_json.py`
+- [X] T025 [US1] Implement the name-resolution chain in `backend/src/scanning/name_resolution.py` per FR-004 (depends on T020-T024 parser output shape)
+- [X] T026 [US1] Implement the scan orchestrator in `backend/src/scanning/scan_service.py`: walks each requested root via the T009 walker, dispatches each manifest to its matching parser, isolates per-manifest parse failures so one bad file never stops the scan (FR-007), records a `ScanIssue` row for each unreachable root (`issue_type="unreachable_path"`, FR-010) and each unparsable manifest (`issue_type="unparsable"`, FR-008), marks a service `is_complete=false` and records a linked `ScanIssue` (`issue_type="incomplete_data"`) when a manifest parses but lacks a required field (FR-009), and persists all `Service`/`Dependency`/`ScanIssue` rows inside one transaction that replaces the prior scan's results (research.md §8) (depends on T025, T009, T006-T008)
+- [X] T027 [US1] Implement `POST /api/scan` in `backend/src/api/scan.py`, returning `{services_found, issues_found, unreachable_roots}` per contracts/api.md (depends on T026)
+- [X] T028 [US1] Implement `GET /api/services` in `backend/src/api/services.py`, returning the list shape per contracts/api.md
+- [X] T029 [P] [US1] Implement the frontend API client functions `triggerScan()` and `listServices()` in `frontend/src/services/api.ts` per contracts/api.md
+- [X] T030 [P] [US1] Implement the `ScanButton` component in `frontend/src/components/ScanButton.tsx`
+- [X] T031 [P] [US1] Implement the `ServiceTable` component in `frontend/src/components/ServiceTable.tsx`
+- [X] T032 [US1] Implement `RegistryPage` in `frontend/src/pages/RegistryPage.tsx`, composing `ScanButton` and `ServiceTable` (depends on T029-T031)
 
 **Checkpoint**: User Story 1 is independently functional and testable — this is the MVP.
 

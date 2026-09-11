@@ -1,0 +1,30 @@
+# Python (backend)
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+dist/
+build/
+
+# Node.js / React (frontend)
+node_modules/
+frontend/dist/
+frontend/build/
+*.log
+
+# Local SQLite data
+data/
+*.db
+*.sqlite3
+
+# Environment
+.env
+.env.*
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
