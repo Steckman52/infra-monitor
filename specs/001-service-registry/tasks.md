@@ -107,15 +107,15 @@ entry and verify its dependency list matches the source manifest exactly.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T033 [P] [US2] Contract test for `GET /api/services/{id}` in `backend/tests/contract/test_service_detail_endpoint.py` per contracts/api.md, including the `404` case
-- [ ] T034 [US2] Integration test in `backend/tests/integration/test_service_detail.py` asserting the dependency list matches the manifest exactly (Acceptance Scenario 1) and a manifest with zero dependencies yields an explicit empty list (Acceptance Scenario 2)
+- [X] T033 [P] [US2] Contract test for `GET /api/services/{id}` in `backend/tests/contract/test_service_detail_endpoint.py` per contracts/api.md, including the `404` case
+- [X] T034 [US2] Integration test in `backend/tests/integration/test_service_detail.py` asserting the dependency list matches the manifest exactly (Acceptance Scenario 1) and a manifest with zero dependencies yields an explicit empty list (Acceptance Scenario 2)
 
 ### Implementation for User Story 2
 
-- [ ] T035 [US2] Implement `GET /api/services/{id}` in `backend/src/api/services.py`, returning full detail including dependencies per contracts/api.md, `404` when the id does not exist (depends on T028)
-- [ ] T036 [P] [US2] Implement the frontend API client function `getServiceDetail(id)` in `frontend/src/services/api.ts`
-- [ ] T037 [P] [US2] Implement the `ServiceDetail` component in `frontend/src/components/ServiceDetail.tsx`
-- [ ] T038 [US2] Implement `ServiceDetailPage` in `frontend/src/pages/ServiceDetailPage.tsx`, linked from `ServiceTable` rows (depends on T031, T036, T037)
+- [X] T035 [US2] Implement `GET /api/services/{id}` in `backend/src/api/services.py`, returning full detail including dependencies per contracts/api.md, `404` when the id does not exist (depends on T028)
+- [X] T036 [P] [US2] Implement the frontend API client function `getServiceDetail(id)` in `frontend/src/services/api.ts`
+- [X] T037 [P] [US2] Implement the `ServiceDetail` component in `frontend/src/components/ServiceDetail.tsx`
+- [X] T038 [US2] Implement `ServiceDetailPage` in `frontend/src/pages/ServiceDetailPage.tsx`, linked from `ServiceTable` rows (depends on T031, T036, T037)
 
 **Checkpoint**: User Stories 1 AND 2 both work independently.
 

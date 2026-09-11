@@ -7,12 +7,13 @@ def test_full_scan_produces_expected_registry(db_session, fixtures_dir):
 
     summary = run_scan(db_session, [str(fixtures_dir), missing_root])
 
-    # 11 manifests produce a service: repo-node, repo-java, repo-python, repo-go,
-    # repo-php, repo-incomplete-java (incomplete but still a service, FR-009),
-    # repo-monorepo/frontend + repo-monorepo/backend, repo-with-vendor (the
-    # node_modules decoy is excluded, FR-006), repo-collision-a, repo-collision-b.
+    # 12 manifests produce a service: repo-node, repo-java, repo-python, repo-go,
+    # repo-php, repo-no-deps, repo-incomplete-java (incomplete but still a
+    # service, FR-009), repo-monorepo/frontend + repo-monorepo/backend,
+    # repo-with-vendor (the node_modules decoy is excluded, FR-006),
+    # repo-collision-a, repo-collision-b.
     # repo-broken/package.json is invalid and produces no service (FR-007/FR-008).
-    assert summary.services_found == 11
+    assert summary.services_found == 12
     assert missing_root in summary.unreachable_roots  # Acceptance Scenario 4, FR-010
 
     services = db_session.query(Service).all()

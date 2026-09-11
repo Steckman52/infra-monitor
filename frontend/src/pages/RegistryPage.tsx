@@ -3,7 +3,11 @@ import ScanButton from '../components/ScanButton';
 import ServiceTable from '../components/ServiceTable';
 import { listServices, type ScanResponse, type ServiceSummary } from '../services/api';
 
-function RegistryPage() {
+interface RegistryPageProps {
+  onSelectService: (id: number) => void;
+}
+
+function RegistryPage({ onSelectService }: RegistryPageProps) {
   const [services, setServices] = useState<ServiceSummary[]>([]);
   const [lastScanSummary, setLastScanSummary] = useState<ScanResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -45,7 +49,7 @@ function RegistryPage() {
           {loadError}
         </p>
       )}
-      <ServiceTable services={services} />
+      <ServiceTable services={services} onSelectService={onSelectService} />
     </div>
   );
 }

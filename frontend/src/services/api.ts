@@ -12,6 +12,17 @@ export interface ScanResponse {
   unreachable_roots: string[];
 }
 
+export interface Dependency {
+  name: string;
+  declared_version: string | null;
+}
+
+export interface ServiceDetail extends ServiceSummary {
+  manifest_path: string;
+  last_scanned_at: string;
+  dependencies: Dependency[];
+}
+
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -31,4 +42,9 @@ export async function triggerScan(roots: string[]): Promise<ScanResponse> {
 export async function listServices(): Promise<ServiceSummary[]> {
   const response = await fetch('/api/services');
   return parseJsonOrThrow<ServiceSummary[]>(response);
+}
+
+export async function getServiceDetail(id: number): Promise<ServiceDetail> {
+  const response = await fetch(`/api/services/${id}`);
+  return parseJsonOrThrow<ServiceDetail>(response);
 }
