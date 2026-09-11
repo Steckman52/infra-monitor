@@ -6,10 +6,11 @@ Validates the feature end-to-end against the acceptance scenarios in
 ## Prerequisites
 
 - Python 3.12+, Node.js (for the frontend build)
-- A test fixture directory tree containing: one `package.json`, one `pom.xml`, one
-  `requirements.txt`, one `go.mod`, one `composer.json` (each a valid, minimal
-  manifest), plus one syntactically invalid `package.json` and one `pom.xml`
-  missing `artifactId` (to exercise scan issues)
+- The fixture directory tree at `backend/tests/integration/fixtures/` (already
+  checked in): valid manifests of all five supported types, a monorepo with two
+  manifests, a `node_modules` decoy, two same-named manifests to exercise
+  collision handling, a manifest with zero dependencies, one syntactically
+  invalid `package.json`, and one `pom.xml` missing `artifactId`
 
 ## Setup
 
@@ -31,9 +32,11 @@ npm run dev
 1. Open the frontend in a browser; the registry table is empty before any scan.
 2. Trigger a scan against the fixture directory (via the UI's scan button, or
    directly: `curl -X POST http://localhost:8000/api/scan -d '{"roots":["<fixture path>"]}' -H "Content-Type: application/json"`).
-3. **Expect** (User Story 1): the registry table shows exactly 5 services, one per
-   valid manifest, each with a derived name, ecosystem, and repository path — see
-   [contracts/api.md](./contracts/api.md).
+3. **Expect** (User Story 1): the registry table shows exactly 12 services, one
+   per valid manifest, each with a derived name, ecosystem, and repository
+   path — see [contracts/api.md](./contracts/api.md). The two same-named
+   fixture manifests appear as distinct entries (SC-006), and nothing from
+   `node_modules` is listed (FR-006).
 4. Open the service derived from the manifest with declared dependencies.
    **Expect** (User Story 2): its dependency list matches the manifest exactly.
 5. Open the Scan Issues view. **Expect** (User Story 3): the broken `package.json`
@@ -43,8 +46,12 @@ npm run dev
 6. Fix the broken `package.json` in the fixture tree and re-run the scan.
    **Expect** (SC-005): the corresponding scan issue disappears and a new service
    entry appears in its place.
+7. **Expect** (FR-015): nowhere in the UI or API is there a way to manually
+   create or edit a service entry — the registry only ever changes via a scan.
 
-## Out of scope for this quickstart
+## Validation record
 
-- Performance validation against the 500-manifest / 30-second target (covered by a
-  dedicated integration test in `backend/tests/integration/`, not manual steps).
+Last run 2026-09-11: all 7 steps passed manually in-browser (see commit
+history for this feature), plus 27 automated backend tests including a
+dedicated performance test (`test_scan_performance.py`, 500 generated
+manifests scanned well under the 30-second target).

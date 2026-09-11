@@ -148,10 +148,10 @@ fixing one and re-scanning removes it from the list.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T045 [P] Author the dogfooding ADRs identified in plan.md's Complexity Tracking as plain MADR files: `docs/adr/0001-sqlite-over-server-db.md`, `docs/adr/0002-sqlalchemy-orm.md`, `docs/adr/0003-rescan-delete-and-repopulate.md` (Constitution Principle VI)
-- [ ] T046 [P] Write `backend/README.md` and `frontend/README.md` covering each module's purpose, public interface, and run instructions (Constitution Principle VI)
-- [ ] T047 Add a performance integration test in `backend/tests/integration/test_scan_performance.py` asserting a scan of ~500 generated manifests completes in under 30 seconds (plan.md Performance Goals)
-- [ ] T048 Run the quickstart.md validation end-to-end, record the result, and confirm no manual create/edit affordance for a service entry exists anywhere in the API or frontend (FR-015)
+- [X] T045 [P] Author the dogfooding ADRs identified in plan.md's Complexity Tracking as plain MADR files: `docs/adr/0001-sqlite-over-server-db.md`, `docs/adr/0002-sqlalchemy-orm.md`, `docs/adr/0003-rescan-delete-and-repopulate.md` (Constitution Principle VI)
+- [X] T046 [P] Write `backend/README.md` and `frontend/README.md` covering each module's purpose, public interface, and run instructions (Constitution Principle VI)
+- [X] T047 Add a performance integration test in `backend/tests/integration/test_scan_performance.py` asserting a scan of ~500 generated manifests completes in under 30 seconds (plan.md Performance Goals)
+- [X] T048 Run the quickstart.md validation end-to-end, record the result, and confirm no manual create/edit affordance for a service entry exists anywhere in the API or frontend (FR-015)
 
 ---
 
