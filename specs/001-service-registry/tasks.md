@@ -132,15 +132,15 @@ fixing one and re-scanning removes it from the list.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T039 [P] [US3] Contract test for `GET /api/scan-issues` in `backend/tests/contract/test_scan_issues_endpoint.py` per contracts/api.md
-- [ ] T040 [US3] Integration test in `backend/tests/integration/test_scan_issues.py` asserting: an invalid manifest produces an `issue_type="unparsable"` entry with a specific reason and no service (Acceptance Scenario 1); a `pom.xml` missing `artifactId` produces a service with `is_complete=false` plus a linked `issue_type="incomplete_data"` entry (Acceptance Scenario 2); fixing the manifest and re-scanning removes the resolved issue (Acceptance Scenario 3, SC-005); and, separately, adding a brand-new manifest to the fixture tree before a re-scan makes it appear as a new service while deleting a previously-scanned manifest before a re-scan makes its service and dependencies disappear (FR-014 add/remove sub-cases, SC-005)
+- [X] T039 [P] [US3] Contract test for `GET /api/scan-issues` in `backend/tests/contract/test_scan_issues_endpoint.py` per contracts/api.md
+- [X] T040 [US3] Integration test in `backend/tests/integration/test_scan_issues.py` asserting: an invalid manifest produces an `issue_type="unparsable"` entry with a specific reason and no service (Acceptance Scenario 1); a `pom.xml` missing `artifactId` produces a service with `is_complete=false` plus a linked `issue_type="incomplete_data"` entry (Acceptance Scenario 2); fixing the manifest and re-scanning removes the resolved issue (Acceptance Scenario 3, SC-005); and, separately, adding a brand-new manifest to the fixture tree before a re-scan makes it appear as a new service while deleting a previously-scanned manifest before a re-scan makes its service and dependencies disappear (FR-014 add/remove sub-cases, SC-005)
 
 ### Implementation for User Story 3
 
-- [ ] T041 [US3] Implement `GET /api/scan-issues` in `backend/src/api/scan_issues.py` per contracts/api.md (depends on T026 already persisting `ScanIssue` rows)
-- [ ] T042 [P] [US3] Implement the frontend API client function `listScanIssues()` in `frontend/src/services/api.ts`
-- [ ] T043 [P] [US3] Implement the `ScanIssuesList` component in `frontend/src/components/ScanIssuesList.tsx`
-- [ ] T044 [US3] Implement `ScanIssuesPage` in `frontend/src/pages/ScanIssuesPage.tsx` (depends on T042, T043)
+- [X] T041 [US3] Implement `GET /api/scan-issues` in `backend/src/api/scan_issues.py` per contracts/api.md (depends on T026 already persisting `ScanIssue` rows)
+- [X] T042 [P] [US3] Implement the frontend API client function `listScanIssues()` in `frontend/src/services/api.ts`
+- [X] T043 [P] [US3] Implement the `ScanIssuesList` component in `frontend/src/components/ScanIssuesList.tsx`
+- [X] T044 [US3] Implement `ScanIssuesPage` in `frontend/src/pages/ScanIssuesPage.tsx` (depends on T042, T043)
 
 **Checkpoint**: All three user stories are independently functional.
 

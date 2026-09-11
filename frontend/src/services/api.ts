@@ -23,6 +23,16 @@ export interface ServiceDetail extends ServiceSummary {
   dependencies: Dependency[];
 }
 
+export interface ScanIssue {
+  id: number;
+  manifest_path: string;
+  repository_path: string;
+  issue_type: 'unparsable' | 'incomplete_data' | 'unreachable_path';
+  reason: string;
+  service_id: number | null;
+  detected_at: string;
+}
+
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -47,4 +57,9 @@ export async function listServices(): Promise<ServiceSummary[]> {
 export async function getServiceDetail(id: number): Promise<ServiceDetail> {
   const response = await fetch(`/api/services/${id}`);
   return parseJsonOrThrow<ServiceDetail>(response);
+}
+
+export async function listScanIssues(): Promise<ScanIssue[]> {
+  const response = await fetch('/api/scan-issues');
+  return parseJsonOrThrow<ScanIssue[]>(response);
 }

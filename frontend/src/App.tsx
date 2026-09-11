@@ -1,20 +1,35 @@
 import { useState } from 'react'
 import RegistryPage from './pages/RegistryPage'
+import ScanIssuesPage from './pages/ScanIssuesPage'
 import ServiceDetailPage from './pages/ServiceDetailPage'
 
-function App() {
-  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null)
+type View =
+  | { name: 'registry' }
+  | { name: 'service-detail'; serviceId: number }
+  | { name: 'scan-issues' }
 
-  if (selectedServiceId !== null) {
+function App() {
+  const [view, setView] = useState<View>({ name: 'registry' })
+
+  if (view.name === 'service-detail') {
     return (
       <ServiceDetailPage
-        serviceId={selectedServiceId}
-        onBack={() => setSelectedServiceId(null)}
+        serviceId={view.serviceId}
+        onBack={() => setView({ name: 'registry' })}
       />
     )
   }
 
-  return <RegistryPage onSelectService={setSelectedServiceId} />
+  if (view.name === 'scan-issues') {
+    return <ScanIssuesPage onBack={() => setView({ name: 'registry' })} />
+  }
+
+  return (
+    <RegistryPage
+      onSelectService={(serviceId) => setView({ name: 'service-detail', serviceId })}
+      onViewScanIssues={() => setView({ name: 'scan-issues' })}
+    />
+  )
 }
 
 export default App
