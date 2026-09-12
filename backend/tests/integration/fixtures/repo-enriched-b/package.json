@@ -1,0 +1,6 @@
+{
+  "name": "enriched-service-b",
+  "dependencies": {
+    "winston": "^2.4.0"
+  }
+}

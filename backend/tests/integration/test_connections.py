@@ -15,10 +15,15 @@ def _bases_by_pair(connections):
 
 
 def test_connections_from_compose_fixture(db_session, fixtures_dir):
+    # Scoped to compose/valid + compose/broken explicitly, not the whole
+    # compose/ directory -- other tests (US3) add their own compose
+    # fixtures under compose/, and this test's exact external-node/
+    # connection assertions must stay decoupled from that.
     summary = run_scan(
         db_session,
         [
-            str(fixtures_dir / "compose"),
+            str(fixtures_dir / "compose" / "valid"),
+            str(fixtures_dir / "compose" / "broken"),
             str(fixtures_dir / "repo-node"),
             str(fixtures_dir / "repo-go"),
         ],

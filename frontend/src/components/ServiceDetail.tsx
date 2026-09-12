@@ -40,6 +40,37 @@ function ServiceDetail({ service }: ServiceDetailProps) {
           </tbody>
         </table>
       )}
+
+      <h3>Compatibility Risks</h3>
+      {service.compatibility_risks.length === 0 ? (
+        <p>No compatibility risks with other services.</p>
+      ) : (
+        <ul className="compatibility-risks">
+          {service.compatibility_risks.map((risk) => (
+            <li key={`${risk.ecosystem}:${risk.name}`}>
+              <strong>{risk.name}</strong> ({risk.declared_version}) conflicts with:{' '}
+              {risk.conflicting_with
+                .map((c) => `${c.service_name} (${c.declared_version ?? '—'})`)
+                .join(', ')}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h3>Connections</h3>
+      {service.connections.length === 0 ? (
+        <p>Not connected to any other service or external node.</p>
+      ) : (
+        <ul className="connections">
+          {service.connections.map((edge, index) => (
+            <li key={index}>
+              {edge.node.name}
+              {edge.node.type === 'external' && ' (external)'} —{' '}
+              {edge.relationship_basis.replace('_', ' ')}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

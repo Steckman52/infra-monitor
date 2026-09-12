@@ -110,14 +110,14 @@ visible without navigating elsewhere.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T026 [US3] Extend the contract test in `backend/tests/contract/test_service_detail_endpoint.py` to assert the `GET /api/services/{id}` response includes `compatibility_risks` and `connections` fields (empty arrays when none apply)
-- [ ] T027 [US3] Integration test in `backend/tests/integration/test_service_detail_enrichment.py`: scan a fixture combining a compatibility risk and a compose connection for the same service, then verify both appear correctly in that service's detail data (Acceptance Scenarios 1-2)
+- [X] T026 [US3] Extend the contract test in `backend/tests/contract/test_service_detail_endpoint.py` to assert the `GET /api/services/{id}` response includes `compatibility_risks` and `connections` fields (empty arrays when none apply)
+- [X] T027 [US3] Integration test in `backend/tests/integration/test_service_detail_enrichment.py`: scan a fixture combining a compatibility risk and a compose connection for the same service, then verify both appear correctly in that service's detail data (Acceptance Scenarios 1-2)
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Extend `ServiceDetail` and `get_service_detail` in `backend/src/api/services.py` to include `compatibility_risks` (via `compute_compatibility`, filtered to this service, from T008) and `connections` (via the connection graph, filtered to this service's node, from T020/T022) per contracts/api.md (depends on T008, T020)
-- [ ] T029 [P] [US3] Extend the `ServiceDetail` TypeScript type in `frontend/src/services/api.ts` with `compatibility_risks` and `connections` fields
-- [ ] T030 [US3] Render a "Compatibility Risks" and a "Connections" section in `frontend/src/components/ServiceDetail.tsx` (depends on T029)
+- [X] T028 [US3] Extend `ServiceDetail` and `get_service_detail` in `backend/src/api/services.py` to include `compatibility_risks` (via `compute_compatibility`, filtered to this service, from T008) and `connections` (via the connection graph, filtered to this service's node, from T020/T022) per contracts/api.md (depends on T008, T020)
+- [X] T029 [P] [US3] Extend the `ServiceDetail` TypeScript type in `frontend/src/services/api.ts` with `compatibility_risks` and `connections` fields
+- [X] T030 [US3] Render a "Compatibility Risks" and a "Connections" section in `frontend/src/components/ServiceDetail.tsx` (depends on T029)
 
 **Checkpoint**: All three user stories are independently functional.
 

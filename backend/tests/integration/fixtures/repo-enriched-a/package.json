@@ -1,0 +1,6 @@
+{
+  "name": "enriched-service-a",
+  "dependencies": {
+    "winston": "^3.11.0"
+  }
+}

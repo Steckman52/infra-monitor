@@ -34,8 +34,9 @@ def _ref(service: Service | None, external_node: ExternalNode | None) -> NodeRef
     return None
 
 
-@router.get("/connections", response_model=list[NodeConnectionsOut])
-def list_connections(session: Session = Depends(get_session)) -> list[NodeConnectionsOut]:
+def build_adjacency(session: Session) -> dict[tuple[str, int], NodeConnectionsOut]:
+    """Shared by GET /api/connections and the service-detail enrichment
+    (002 US3) so both read the same symmetric adjacency list."""
     adjacency: dict[tuple[str, int], dict] = {}
 
     def add_edge(a: NodeRef, b: NodeRef, basis: str) -> None:
@@ -50,7 +51,12 @@ def list_connections(session: Session = Depends(get_session)) -> list[NodeConnec
         add_edge(a, b, row.relationship_basis)
         add_edge(b, a, row.relationship_basis)
 
-    return [
-        NodeConnectionsOut(node=entry["node"], connections=entry["connections"])
-        for entry in adjacency.values()
-    ]
+    return {
+        key: NodeConnectionsOut(node=entry["node"], connections=entry["connections"])
+        for key, entry in adjacency.items()
+    }
+
+
+@router.get("/connections", response_model=list[NodeConnectionsOut])
+def list_connections(session: Session = Depends(get_session)) -> list[NodeConnectionsOut]:
+    return list(build_adjacency(session).values())

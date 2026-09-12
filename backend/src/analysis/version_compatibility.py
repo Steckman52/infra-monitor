@@ -99,3 +99,49 @@ def compute_compatibility(session: Session) -> list[CompatibilityGroup]:
         )
 
     return groups
+
+
+@dataclass
+class ConflictingEntry:
+    service_id: int
+    service_name: str
+    declared_version: str | None
+
+
+@dataclass
+class CompatibilityRisk:
+    name: str
+    ecosystem: str
+    declared_version: str | None
+    conflicting_with: list[ConflictingEntry]
+
+
+def risks_for_service(groups: list[CompatibilityGroup], service_id: int) -> list[CompatibilityRisk]:
+    """002 FR-014: a service's own compatibility risks, reusing the
+    already-computed groups rather than re-querying. A service whose own
+    version isn't comparable isn't itself flagged as 'at risk'."""
+    risks: list[CompatibilityRisk] = []
+    for group in groups:
+        own = next((e for e in group.entries if e.service_id == service_id), None)
+        if own is None or own.major_version is None:
+            continue
+
+        conflicting = [
+            ConflictingEntry(
+                service_id=e.service_id, service_name=e.service_name, declared_version=e.declared_version
+            )
+            for e in group.entries
+            if e.service_id != service_id
+            and e.major_version is not None
+            and e.major_version != own.major_version
+        ]
+        if conflicting:
+            risks.append(
+                CompatibilityRisk(
+                    name=group.name,
+                    ecosystem=group.ecosystem,
+                    declared_version=own.declared_version,
+                    conflicting_with=conflicting,
+                )
+            )
+    return risks

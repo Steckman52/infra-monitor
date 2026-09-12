@@ -17,10 +17,25 @@ export interface Dependency {
   declared_version: string | null;
 }
 
+export interface ConflictingService {
+  service_id: number;
+  service_name: string;
+  declared_version: string | null;
+}
+
+export interface CompatibilityRisk {
+  name: string;
+  ecosystem: string;
+  declared_version: string | null;
+  conflicting_with: ConflictingService[];
+}
+
 export interface ServiceDetail extends ServiceSummary {
   manifest_path: string;
   last_scanned_at: string;
   dependencies: Dependency[];
+  compatibility_risks: CompatibilityRisk[];
+  connections: ConnectionEdge[];
 }
 
 export interface ScanIssue {

@@ -1,0 +1,7 @@
+services:
+  enriched-a:
+    build: ../../repo-enriched-a
+    depends_on:
+      - cache
+  cache:
+    image: redis:7
