@@ -6,9 +6,10 @@ import { listErrorGroups, type ErrorGroupSummary, type LogScanResponse } from '.
 interface LogsPageProps {
   onBack: () => void;
   onSelectGroup: (id: number) => void;
+  onViewLogScanIssues: () => void;
 }
 
-function LogsPage({ onBack, onSelectGroup }: LogsPageProps) {
+function LogsPage({ onBack, onSelectGroup, onViewLogScanIssues }: LogsPageProps) {
   const [groups, setGroups] = useState<ErrorGroupSummary[]>([]);
   const [lastScanSummary, setLastScanSummary] = useState<LogScanResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -38,6 +39,9 @@ function LogsPage({ onBack, onSelectGroup }: LogsPageProps) {
         ← Back to registry
       </button>
       <h1>Log Errors</h1>
+      <button type="button" onClick={onViewLogScanIssues}>
+        View log scan issues
+      </button>
       <LogScanButton onScanComplete={handleScanComplete} />
       {lastScanSummary && (
         <p className="scan-summary">

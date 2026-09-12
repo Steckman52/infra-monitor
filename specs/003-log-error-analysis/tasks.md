@@ -113,15 +113,15 @@ issues view, and the `.gz` file appears nowhere.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T028 [P] [US3] Contract test for `GET /api/log-scan-issues` in `backend/tests/contract/test_log_scan_issues_endpoint.py` per contracts/api.md
-- [ ] T029 [US3] Integration test in `backend/tests/integration/test_log_scan_issues.py`: assert the unmatched directory produces an `unattributed` issue and the unreadable file produces an `unreadable` issue with a specific reason (Acceptance Scenarios 1-2), and that the `.gz` file produces no issue and no group anywhere (FR-002); and, separately, in a mutable copy of the fixture, rename the unattributed directory to match a registered service and re-scan, asserting the `unattributed` issue is gone and its errors now appear as a normal group (Acceptance Scenario 3, FR-015/SC-005)
+- [X] T028 [P] [US3] Contract test for `GET /api/log-scan-issues` in `backend/tests/contract/test_log_scan_issues_endpoint.py` per contracts/api.md
+- [X] T029 [US3] Integration test in `backend/tests/integration/test_log_scan_issues.py`: assert the unmatched directory produces an `unattributed` issue and the unreadable file produces an `unreadable` issue with a specific reason (Acceptance Scenarios 1-2), and that the `.gz` file produces no issue and no group anywhere (FR-002); and, separately, in a mutable copy of the fixture, rename the unattributed directory to match a registered service and re-scan, asserting the `unattributed` issue is gone and its errors now appear as a normal group (Acceptance Scenario 3, FR-015/SC-005)
 
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] Implement `GET /api/log-scan-issues` in `backend/src/api/log_scan_issues.py` per contracts/api.md, register its router (depends on T015)
-- [ ] T031 [P] [US3] Implement frontend API client function `listLogScanIssues()` in `frontend/src/services/api.ts`
-- [ ] T032 [P] [US3] Implement `LogScanIssuesList` component in `frontend/src/components/LogScanIssuesList.tsx`
-- [ ] T033 [US3] Implement `LogScanIssuesPage` in `frontend/src/pages/LogScanIssuesPage.tsx` and add a navigation entry from `RegistryPage` (depends on T031, T032)
+- [X] T030 [US3] Implement `GET /api/log-scan-issues` in `backend/src/api/log_scan_issues.py` per contracts/api.md, register its router (depends on T015)
+- [X] T031 [P] [US3] Implement frontend API client function `listLogScanIssues()` in `frontend/src/services/api.ts`
+- [X] T032 [P] [US3] Implement `LogScanIssuesList` component in `frontend/src/components/LogScanIssuesList.tsx`
+- [X] T033 [US3] Implement `LogScanIssuesPage` in `frontend/src/pages/LogScanIssuesPage.tsx` and add a navigation entry from `RegistryPage` (depends on T031, T032)
 
 **Checkpoint**: All three user stories are independently functional.
 

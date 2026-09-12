@@ -48,6 +48,14 @@ export interface ScanIssue {
   detected_at: string;
 }
 
+export interface LogScanIssue {
+  id: number;
+  path: string;
+  issue_type: 'unattributed' | 'unreadable';
+  reason: string;
+  detected_at: string;
+}
+
 export interface CompatibilityEntry {
   service_id: number;
   service_name: string;
@@ -166,4 +174,9 @@ export async function listErrorGroups(): Promise<ErrorGroupSummary[]> {
 export async function getErrorGroupDetail(id: number): Promise<ErrorGroupDetail> {
   const response = await fetch(`/api/error-groups/${id}`);
   return parseJsonOrThrow<ErrorGroupDetail>(response);
+}
+
+export async function listLogScanIssues(): Promise<LogScanIssue[]> {
+  const response = await fetch('/api/log-scan-issues');
+  return parseJsonOrThrow<LogScanIssue[]>(response);
 }
