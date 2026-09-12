@@ -10,7 +10,7 @@ from src.db import Base, make_engine
 def db_engine(tmp_path):
     engine = make_engine(tmp_path / "test.db")
 
-    from src.models import dependency, scan_issue, service  # noqa: F401
+    import src.models  # noqa: F401  (registers every model on Base)
 
     Base.metadata.create_all(bind=engine)
     yield engine

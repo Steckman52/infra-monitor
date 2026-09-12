@@ -48,6 +48,22 @@ export interface CompatibilityGroup {
   entries: CompatibilityEntry[];
 }
 
+export interface NodeRef {
+  type: 'service' | 'external';
+  id: number;
+  name: string;
+}
+
+export interface ConnectionEdge {
+  node: NodeRef;
+  relationship_basis: 'shared_network' | 'depends_on' | 'both';
+}
+
+export interface NodeConnections {
+  node: NodeRef;
+  connections: ConnectionEdge[];
+}
+
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -82,4 +98,9 @@ export async function listScanIssues(): Promise<ScanIssue[]> {
 export async function listCompatibility(): Promise<CompatibilityGroup[]> {
   const response = await fetch('/api/dependency-compatibility');
   return parseJsonOrThrow<CompatibilityGroup[]>(response);
+}
+
+export async function listConnections(): Promise<NodeConnections[]> {
+  const response = await fetch('/api/connections');
+  return parseJsonOrThrow<NodeConnections[]>(response);
 }

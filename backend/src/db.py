@@ -28,7 +28,7 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
 def init_db(bind_engine=engine) -> None:
-    from src.models import dependency, scan_issue, service  # noqa: F401  (register models on Base)
+    import src.models  # noqa: F401  (registers every model on Base)
 
     Base.metadata.create_all(bind=bind_engine)
 

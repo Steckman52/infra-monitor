@@ -33,3 +33,12 @@ def find_manifests(root: Path) -> Iterator[tuple[Path, str]]:
             ecosystem = MANIFEST_ECOSYSTEMS.get(filename)
             if ecosystem is not None:
                 yield Path(dirpath) / filename, ecosystem
+
+
+def find_docker_compose_files(root: Path) -> Iterator[Path]:
+    """Walk `root`, yielding every file literally named `docker-compose.yml`
+    (research.md §5, feature 002) — same exclusion pruning as find_manifests."""
+    for dirpath, dirnames, filenames in os.walk(root, topdown=True):
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIR_NAMES]
+        if "docker-compose.yml" in filenames:
+            yield Path(dirpath) / "docker-compose.yml"

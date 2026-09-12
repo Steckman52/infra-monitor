@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.api import compatibility, scan, scan_issues, services
+from src.api import compatibility, connections, scan, scan_issues, services
 from src.db import init_db
 
 
@@ -17,3 +17,4 @@ app.include_router(scan.router)
 app.include_router(services.router)
 app.include_router(scan_issues.router)
 app.include_router(compatibility.router)
+app.include_router(connections.router)
