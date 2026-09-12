@@ -5,9 +5,10 @@ import { listErrorGroups, type ErrorGroupSummary, type LogScanResponse } from '.
 
 interface LogsPageProps {
   onBack: () => void;
+  onSelectGroup: (id: number) => void;
 }
 
-function LogsPage({ onBack }: LogsPageProps) {
+function LogsPage({ onBack, onSelectGroup }: LogsPageProps) {
   const [groups, setGroups] = useState<ErrorGroupSummary[]>([]);
   const [lastScanSummary, setLastScanSummary] = useState<LogScanResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -49,7 +50,7 @@ function LogsPage({ onBack }: LogsPageProps) {
           {loadError}
         </p>
       )}
-      <ErrorGroupsTable groups={groups} />
+      <ErrorGroupsTable groups={groups} onSelectGroup={onSelectGroup} />
     </div>
   );
 }

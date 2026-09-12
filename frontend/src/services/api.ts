@@ -96,6 +96,18 @@ export interface ErrorGroupSummary {
   last_seen: string | null;
 }
 
+export interface ErrorOccurrence {
+  raw_text: string;
+  occurred_at: string | null;
+  source_log_path: string;
+  line_number: number;
+}
+
+export interface ErrorGroupDetail extends ErrorGroupSummary {
+  example_text: string;
+  occurrences: ErrorOccurrence[];
+}
+
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -149,4 +161,9 @@ export async function triggerLogScan(root: string): Promise<LogScanResponse> {
 export async function listErrorGroups(): Promise<ErrorGroupSummary[]> {
   const response = await fetch('/api/error-groups');
   return parseJsonOrThrow<ErrorGroupSummary[]>(response);
+}
+
+export async function getErrorGroupDetail(id: number): Promise<ErrorGroupDetail> {
+  const response = await fetch(`/api/error-groups/${id}`);
+  return parseJsonOrThrow<ErrorGroupDetail>(response);
 }

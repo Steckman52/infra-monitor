@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import CompatibilityPage from './pages/CompatibilityPage'
 import ConnectionsPage from './pages/ConnectionsPage'
+import ErrorGroupDetailPage from './pages/ErrorGroupDetailPage'
 import LogsPage from './pages/LogsPage'
 import RegistryPage from './pages/RegistryPage'
 import ScanIssuesPage from './pages/ScanIssuesPage'
@@ -13,6 +14,7 @@ type View =
   | { name: 'compatibility' }
   | { name: 'connections' }
   | { name: 'logs' }
+  | { name: 'error-group-detail'; groupId: number }
 
 function App() {
   const [view, setView] = useState<View>({ name: 'registry' })
@@ -38,8 +40,22 @@ function App() {
     return <ConnectionsPage onBack={() => setView({ name: 'registry' })} />
   }
 
+  if (view.name === 'error-group-detail') {
+    return (
+      <ErrorGroupDetailPage
+        groupId={view.groupId}
+        onBack={() => setView({ name: 'logs' })}
+      />
+    )
+  }
+
   if (view.name === 'logs') {
-    return <LogsPage onBack={() => setView({ name: 'registry' })} />
+    return (
+      <LogsPage
+        onBack={() => setView({ name: 'registry' })}
+        onSelectGroup={(groupId) => setView({ name: 'error-group-detail', groupId })}
+      />
+    )
   }
 
   return (

@@ -88,15 +88,15 @@ is shown.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T022 [P] [US2] Contract test for `GET /api/error-groups/{id}` in `backend/tests/contract/test_error_group_detail_endpoint.py` per contracts/api.md, including the `404` case
-- [ ] T023 [US2] Integration test in `backend/tests/integration/test_error_group_detail.py`: verify the multi-line-stack-trace group's `example_text` and sampled occurrences contain the complete original text, and that `first_seen`/`last_seen` reflect the extracted timestamps
+- [X] T022 [P] [US2] Contract test for `GET /api/error-groups/{id}` in `backend/tests/contract/test_error_group_detail_endpoint.py` per contracts/api.md, including the `404` case
+- [X] T023 [US2] Integration test in `backend/tests/integration/test_error_group_detail.py`: verify the multi-line-stack-trace group's `example_text` and sampled occurrences contain the complete original text, and that `first_seen`/`last_seen` reflect the extracted timestamps
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Implement `GET /api/error-groups/{id}` in `backend/src/api/error_groups.py` per contracts/api.md, `404` when not found (depends on T017)
-- [ ] T025 [P] [US2] Implement frontend API client function `getErrorGroupDetail(id)` in `frontend/src/services/api.ts`
-- [ ] T026 [P] [US2] Implement `ErrorGroupDetail` component in `frontend/src/components/ErrorGroupDetail.tsx`
-- [ ] T027 [US2] Implement `ErrorGroupDetailPage` in `frontend/src/pages/ErrorGroupDetailPage.tsx`, linked from `ErrorGroupsTable` rows (depends on T020, T025, T026)
+- [X] T024 [US2] Implement `GET /api/error-groups/{id}` in `backend/src/api/error_groups.py` per contracts/api.md, `404` when not found (depends on T017)
+- [X] T025 [P] [US2] Implement frontend API client function `getErrorGroupDetail(id)` in `frontend/src/services/api.ts`
+- [X] T026 [P] [US2] Implement `ErrorGroupDetail` component in `frontend/src/components/ErrorGroupDetail.tsx`
+- [X] T027 [US2] Implement `ErrorGroupDetailPage` in `frontend/src/pages/ErrorGroupDetailPage.tsx`, linked from `ErrorGroupsTable` rows (depends on T020, T025, T026)
 
 **Checkpoint**: User Stories 1 AND 2 both work independently.
 
