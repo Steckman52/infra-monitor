@@ -1,39 +1,43 @@
-# Backend — Service Registry & Dependency Map
+# Backend — Service Registry, Dependency Map & Log Error Analysis
 
 Python/FastAPI backend. Scans repository paths for package-manager
 manifests (`package.json`, `pom.xml`, `requirements.txt`, `go.mod`,
 `composer.json`) and `docker-compose.yml` files, resolving each manifest
-into a service entry and each compose file into a connection graph, all
-stored in a local SQLite database. See
-[specs/001-service-registry](../specs/001-service-registry/) and
-[specs/002-dependency-map](../specs/002-dependency-map/) for the full
-specifications, plans, and data models, and [docs/adr](../docs/adr/) for
-the architectural decisions behind this backend.
+into a service entry and each compose file into a connection graph.
+Independently, scans a local log directory, attributing files to
+registered services and grouping recurring errors. All of it stored in a
+local SQLite database. See
+[specs/001-service-registry](../specs/001-service-registry/),
+[specs/002-dependency-map](../specs/002-dependency-map/), and
+[specs/003-log-error-analysis](../specs/003-log-error-analysis/) for the
+full specifications, plans, and data models, and [docs/adr](../docs/adr/)
+for the architectural decisions behind this backend.
 
 ## Structure
 
 * `src/scanning/` — directory walker, one parser per manifest/compose
   format under `parsers/`, name resolution (FR-004), the `connection_graph`
-  matcher, and the `scan_service` orchestrator that ties all of it together
-  in one transaction.
+  matcher, the `scan_service` orchestrator (repository scan, one
+  transaction), `error_detection.py`/`normalization.py`, and the
+  `log_scan_service` orchestrator (log scan, its own independent
+  transaction).
 * `src/analysis/` — `version_compatibility.py`: major-version extraction
   and compatibility grouping, computed on read (not persisted).
 * `src/models/` — SQLAlchemy models: `Service`, `Dependency`, `ScanIssue`,
-  `ExternalNode`, `ServiceConnection`.
+  `ExternalNode`, `ServiceConnection`, `ErrorGroup`, `ErrorOccurrence`,
+  `LogScanIssue`.
 * `src/api/` — FastAPI routers: `scan.py`, `services.py`, `scan_issues.py`,
-  `compatibility.py`, `connections.py`.
+  `compatibility.py`, `connections.py`, `log_scan.py`, `error_groups.py`,
+  `log_scan_issues.py`.
 * `src/db.py` — SQLite engine/session setup.
 
 ## Public interface
 
-See
-[specs/001-service-registry/contracts/api.md](../specs/001-service-registry/contracts/api.md)
-and
-[specs/002-dependency-map/contracts/api.md](../specs/002-dependency-map/contracts/api.md)
-for the full request/response contract of every endpoint:
+See the `contracts/api.md` file under each feature's spec directory for the
+full request/response contract of every endpoint:
 
-* `POST /api/scan` — scan the given root paths, replacing the registry,
-  scan issues, external nodes, and connections together.
+* `POST /api/scan` — scan the given repository root paths, replacing the
+  registry, scan issues, external nodes, and connections together.
 * `GET /api/services` — list registered services.
 * `GET /api/services/{id}` — a service's full detail: dependencies, its own
   compatibility risks, and its own connections.
@@ -43,6 +47,12 @@ for the full request/response contract of every endpoint:
   than one service, with a compatibility status.
 * `GET /api/connections` — the full service/external-node connection graph
   derived from `docker-compose.yml`.
+* `POST /api/log-scan` — scan a local log directory, independent of the
+  repository scan.
+* `GET /api/error-groups` / `GET /api/error-groups/{id}` — grouped,
+  deduplicated errors per service, with drill-down detail.
+* `GET /api/log-scan-issues` — unattributed log directories and unreadable
+  log files.
 
 ## Running locally
 

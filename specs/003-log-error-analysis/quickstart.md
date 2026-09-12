@@ -47,3 +47,19 @@ available on the same running backend.
   here).
 - Live process log tailing (feature deferred per spec Assumptions — only
   scanning already-exported local files is validated here).
+
+## Validation record
+
+Last run 2026-09-12: steps 1-4 verified in-browser using
+`backend/tests/integration/fixtures/logs/` (the Browser pane's frame
+compositor was temporarily unavailable this session, so verification used
+`get_page_text` plus JS-dispatched click/input events instead of
+pixel-coordinate clicks — same React event handlers, same result); step 5
+(re-scan reflects a new error line) verified via the automated
+`test_rescan_adds_new_group_without_duplicating_existing` integration
+test, not manually re-run in-browser. Along the way, a real bug was found
+and fixed by the multi-line-stack-trace test: naive substring marker
+matching treated `TypeError` as containing the `ERROR` marker, cutting off
+`Caused by:` continuation lines — fixed with word-boundary matching. All
+90 backend tests pass, including the `test_log_scan_of_10000_lines_completes_quickly`
+performance check (well under the 10-second target).

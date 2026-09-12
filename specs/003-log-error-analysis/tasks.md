@@ -129,10 +129,10 @@ issues view, and the `.gz` file appears nowhere.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T034 [P] Author `docs/adr/0006-error-groups-persisted-at-scan-time.md` and `docs/adr/0007-dedicated-log-scan-issue-table.md` as plain MADR files per plan.md's Complexity Tracking (Constitution Principle VI)
-- [ ] T035 [P] Update `backend/README.md` and `frontend/README.md` to document the three new endpoints and three new screens
-- [ ] T036 Add a performance sanity check in `backend/tests/integration/test_log_scan_performance.py` asserting 10,000 generated log lines are scanned and grouped in well under 10 seconds (plan.md Performance Goals)
-- [ ] T037 Run quickstart.md validation end-to-end and record the result
+- [X] T034 [P] Author `docs/adr/0006-error-groups-persisted-at-scan-time.md` and `docs/adr/0007-dedicated-log-scan-issue-table.md` as plain MADR files per plan.md's Complexity Tracking (Constitution Principle VI)
+- [X] T035 [P] Update `backend/README.md` and `frontend/README.md` to document the three new endpoints and three new screens
+- [X] T036 Add a performance sanity check in `backend/tests/integration/test_log_scan_performance.py` asserting 10,000 generated log lines are scanned and grouped in well under 10 seconds (plan.md Performance Goals)
+- [X] T037 Run quickstart.md validation end-to-end and record the result
 
 ---
 
