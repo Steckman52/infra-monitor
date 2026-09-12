@@ -125,10 +125,10 @@ visible without navigating elsewhere.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T031 [P] Author `docs/adr/0004-compatibility-computed-not-persisted.md` and `docs/adr/0005-compose-scan-in-same-transaction.md` as plain MADR files per plan.md's Complexity Tracking (Constitution Principle VI)
-- [ ] T032 [P] Update `backend/README.md` and `frontend/README.md` to document the two new endpoints/screens and the extended service detail response
-- [ ] T033 Add a performance sanity check in `backend/tests/integration/test_compatibility_performance.py` asserting `compute_compatibility` over ~200 services with shared dependencies completes in well under 1 second (plan.md Performance Goals)
-- [ ] T034 Run quickstart.md validation end-to-end and record the result
+- [X] T031 [P] Author `docs/adr/0004-compatibility-computed-not-persisted.md` and `docs/adr/0005-compose-scan-in-same-transaction.md` as plain MADR files per plan.md's Complexity Tracking (Constitution Principle VI)
+- [X] T032 [P] Update `backend/README.md` and `frontend/README.md` to document the two new endpoints/screens and the extended service detail response
+- [X] T033 Add a performance sanity check in `backend/tests/integration/test_compatibility_performance.py` asserting `compute_compatibility` over ~200 services with shared dependencies completes in well under 1 second (plan.md Performance Goals)
+- [X] T034 Run quickstart.md validation end-to-end and record the result
 
 ---
 

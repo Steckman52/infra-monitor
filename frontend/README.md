@@ -1,17 +1,21 @@
-# Frontend — Service Registry UI
+# Frontend — Service Registry & Dependency Map UI
 
 React (Vite + TypeScript) single-page app for the infrastructure monitoring
-system's service registry: trigger scans, browse discovered services, and
-review scan issues. Talks to the [backend](../backend/README.md) over
+system: trigger scans, browse discovered services, review scan issues,
+check dependency version compatibility, and view the docker-compose-derived
+connection graph. Talks to the [backend](../backend/README.md) over
 `/api/*`.
 
 ## Structure
 
-* `src/pages/` — `RegistryPage`, `ServiceDetailPage`, `ScanIssuesPage`, one
-  per screen. `App.tsx` switches between them with simple local state (no
-  router — three screens don't justify the dependency).
+* `src/pages/` — `RegistryPage`, `ServiceDetailPage`, `ScanIssuesPage`,
+  `CompatibilityPage`, `ConnectionsPage`, one per screen. `App.tsx` switches
+  between them with simple local state (no router — five screens still
+  don't justify the dependency).
 * `src/components/` — `ScanButton`, `ServiceTable`, `ServiceDetail`,
-  `ScanIssuesList`.
+  `ScanIssuesList`, `CompatibilityTable`, `ConnectionGraphView`.
+  `ServiceDetail` also renders that service's own compatibility risks and
+  connections.
 * `src/services/api.ts` — typed `fetch` wrappers for every backend endpoint.
 
 ## Running locally

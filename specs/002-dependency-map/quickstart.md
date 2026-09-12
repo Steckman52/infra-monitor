@@ -48,3 +48,14 @@ new setup steps.
 - Kubernetes-derived connections (feature deferred per spec Assumptions).
 - Full semantic version range intersection (feature deferred per spec
   Assumptions — only major-version comparison is validated here).
+
+## Validation record
+
+Last run 2026-09-11: steps 1-5 verified manually in-browser using
+`backend/tests/integration/fixtures/compose/` and the
+`repo-shared-dep-*`/`repo-enriched-*` fixtures (see feature commit history);
+step 6 (re-scan reflects a removed connection) verified via the automated
+`test_rescan_removes_connection_after_topology_change` integration test,
+not manually re-run in-browser. All 61 backend tests pass, including the
+`test_compatibility_computation_is_fast_at_scale` performance check (200
+services, well under the 1-second target).
