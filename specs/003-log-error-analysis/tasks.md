@@ -24,7 +24,7 @@ Constitution Principle V, same as features 001/002.
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 [P] Create the log fixture scaffold at `backend/tests/integration/fixtures/logs/`: a `payments-api/` subdirectory (matching the existing registered service) with a log file containing 10+ near-duplicate `ERROR` lines differing only in embedded numbers, one multi-line stack-trace error, and some `INFO`-only lines; an `unknown-service/` subdirectory (matches no registered service) with a log file; one genuinely unreadable file (invalid encoding); one `.gz` file to confirm silent exclusion (FR-002)
+- [ ] T001 [P] Create the log fixture scaffold at `backend/tests/integration/fixtures/logs/`: a `payments-api/` subdirectory (matching the existing registered service) with a log file containing 10+ near-duplicate `ERROR` lines differing only in embedded numbers, one multi-line stack-trace error, and some `INFO`-only lines; two unmatched subdirectories, `unknown-service/` and `another-unknown-service/`, each containing a log file with the *same* error text (to verify unattributed groups are scoped per source directory, not merged); one genuinely unreadable file (invalid encoding); one `.gz` file to confirm silent exclusion (FR-002)
 
 ---
 
@@ -59,7 +59,7 @@ near-duplicate lines collapse into one group with the correct count under
 - [ ] T008 [P] [US1] Unit test for timestamp extraction per research.md §8: ISO-8601 and common-log-format prefixes are parsed; an unrecognized format returns `None` rather than raising
 - [ ] T009 [P] [US1] Contract test for `POST /api/log-scan` in `backend/tests/contract/test_log_scan_endpoint.py` per contracts/api.md
 - [ ] T010 [P] [US1] Contract test for `GET /api/error-groups` in `backend/tests/contract/test_error_groups_endpoint.py` per contracts/api.md
-- [ ] T011 [US1] Integration test in `backend/tests/integration/test_log_scan.py`: scan the T001 fixture tree, assert the near-duplicate lines collapse into one group with the correct `occurrence_count` (SC-001), the multi-line stack trace is captured as one entry, the `INFO`-only content produces no group; then, in a mutable copy of the fixture, add one new distinct error line and re-scan, asserting a new group appears without duplicating the existing ones (FR-015/SC-005)
+- [ ] T011 [US1] Integration test in `backend/tests/integration/test_log_scan.py`: scan the T001 fixture tree, assert the near-duplicate lines collapse into one group with the correct `occurrence_count` (SC-001), the multi-line stack trace is captured as one entry, the `INFO`-only content produces no group, and the two unmatched directories with identical error text produce two distinct groups (keyed by `unattributed_source_path`, not merged — Edge Case, data-model.md grouping key); then, in a mutable copy of the fixture, add one new distinct error line and re-scan, asserting a new group appears without duplicating the existing ones (FR-015/SC-005)
 
 ### Implementation for User Story 1
 
