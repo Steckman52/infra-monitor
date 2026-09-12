@@ -1,0 +1,21 @@
+2026-09-01 03:12:00 INFO Service started
+2026-09-01 03:12:05 INFO Listening on port 3000
+2026-09-01 03:15:00 ERROR Connection refused: db:5432 attempt 1
+2026-09-01 03:16:00 ERROR Connection refused: db:5432 attempt 2
+2026-09-01 03:17:00 ERROR Connection refused: db:5432 attempt 3
+2026-09-01 03:18:00 ERROR Connection refused: db:5432 attempt 4
+2026-09-01 03:19:00 ERROR Connection refused: db:5432 attempt 5
+2026-09-01 03:20:00 ERROR Connection refused: db:5432 attempt 6
+2026-09-01 03:21:00 ERROR Connection refused: db:5432 attempt 7
+2026-09-01 03:22:00 ERROR Connection refused: db:5432 attempt 8
+2026-09-01 03:23:00 ERROR Connection refused: db:5432 attempt 9
+2026-09-01 03:24:00 ERROR Connection refused: db:5432 attempt 10
+2026-09-01 03:25:00 ERROR Connection refused: db:5432 attempt 11
+2026-09-01 03:26:00 INFO Retrying database connection
+2026-09-11 08:47:00 ERROR Connection refused: db:5432 attempt 12
+2026-09-11 09:00:00 ERROR Unhandled exception processing request
+  at handleRequest (server.js:120)
+  at Router.dispatch (router.js:45)
+  Caused by: TypeError: Cannot read property 'id' of undefined
+    at parseBody (server.js:80)
+2026-09-11 09:05:00 INFO Request completed

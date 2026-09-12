@@ -79,6 +79,23 @@ export interface NodeConnections {
   connections: ConnectionEdge[];
 }
 
+export interface LogScanResponse {
+  error_groups_found: number;
+  issues_found: number;
+}
+
+export interface ErrorGroupSummary {
+  id: number;
+  service_id: number | null;
+  service_name: string | null;
+  unattributed_source_path: string | null;
+  normalized_template: string;
+  severity_marker: string;
+  occurrence_count: number;
+  first_seen: string | null;
+  last_seen: string | null;
+}
+
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -118,4 +135,18 @@ export async function listCompatibility(): Promise<CompatibilityGroup[]> {
 export async function listConnections(): Promise<NodeConnections[]> {
   const response = await fetch('/api/connections');
   return parseJsonOrThrow<NodeConnections[]>(response);
+}
+
+export async function triggerLogScan(root: string): Promise<LogScanResponse> {
+  const response = await fetch('/api/log-scan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ root }),
+  });
+  return parseJsonOrThrow<LogScanResponse>(response);
+}
+
+export async function listErrorGroups(): Promise<ErrorGroupSummary[]> {
+  const response = await fetch('/api/error-groups');
+  return parseJsonOrThrow<ErrorGroupSummary[]>(response);
 }

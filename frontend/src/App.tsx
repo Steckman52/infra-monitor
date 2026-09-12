@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import CompatibilityPage from './pages/CompatibilityPage'
 import ConnectionsPage from './pages/ConnectionsPage'
+import LogsPage from './pages/LogsPage'
 import RegistryPage from './pages/RegistryPage'
 import ScanIssuesPage from './pages/ScanIssuesPage'
 import ServiceDetailPage from './pages/ServiceDetailPage'
@@ -11,6 +12,7 @@ type View =
   | { name: 'scan-issues' }
   | { name: 'compatibility' }
   | { name: 'connections' }
+  | { name: 'logs' }
 
 function App() {
   const [view, setView] = useState<View>({ name: 'registry' })
@@ -36,12 +38,17 @@ function App() {
     return <ConnectionsPage onBack={() => setView({ name: 'registry' })} />
   }
 
+  if (view.name === 'logs') {
+    return <LogsPage onBack={() => setView({ name: 'registry' })} />
+  }
+
   return (
     <RegistryPage
       onSelectService={(serviceId) => setView({ name: 'service-detail', serviceId })}
       onViewScanIssues={() => setView({ name: 'scan-issues' })}
       onViewCompatibility={() => setView({ name: 'compatibility' })}
       onViewConnections={() => setView({ name: 'connections' })}
+      onViewLogs={() => setView({ name: 'logs' })}
     />
   )
 }

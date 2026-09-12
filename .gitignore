@@ -13,6 +13,8 @@ node_modules/
 frontend/dist/
 frontend/build/
 *.log
+# ...except committed test fixtures that are deliberately real .log files
+!backend/tests/integration/fixtures/**/*.log
 
 # Local SQLite data
 data/

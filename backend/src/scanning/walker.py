@@ -42,3 +42,18 @@ def find_docker_compose_files(root: Path) -> Iterator[Path]:
         dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIR_NAMES]
         if "docker-compose.yml" in filenames:
             yield Path(dirpath) / "docker-compose.yml"
+
+
+LOG_FILE_EXTENSIONS = {".log", ".txt", ""}
+
+
+def find_log_files(root: Path) -> Iterator[Path]:
+    """Walk `root`, yielding files with extension `.log`, `.txt`, or no
+    extension (003 FR-002) — same exclusion pruning as find_manifests.
+    Other extensions (e.g. compressed/rotated logs) are never yielded."""
+    for dirpath, dirnames, filenames in os.walk(root, topdown=True):
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIR_NAMES]
+        for filename in filenames:
+            path = Path(dirpath) / filename
+            if path.suffix.lower() in LOG_FILE_EXTENSIONS:
+                yield path
