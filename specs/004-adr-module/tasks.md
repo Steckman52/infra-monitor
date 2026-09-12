@@ -26,7 +26,7 @@ Constitution Principle V, same as features 001-003.
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-- [ ] T001 [P] Create the ADR fixture repository at `backend/tests/integration/fixtures/adr-repo/`: `docs/adr/0001-first-decision.md` (plain, `Status: accepted`, no relationships); `docs/adr/0002-second-decision.md` (`Status: superseded by [0003-third-decision](0003-third-decision.md)`); `docs/adr/0003-third-decision.md` (`Status: accepted`, with a `## Links` section containing `Supersedes [0002-second-decision](0002-second-decision.md)` — the *same* logical relationship stated from both sides, to exercise dedup); `docs/adr/broken.md` (body text with no `#` title heading); `docs/adr/secret-leak.md` (a valid title/status, with an `AKIA`-shaped token planted in its body); `docs/adr/diagram.png` (a non-Markdown file, to exercise silent exclusion per FR-002); plus `service-a/package.json` and `service-b/package.json` (two real manifests in the same repository, to exercise the many-to-many service association). Also create a second, unrelated fixture repository at `backend/tests/integration/fixtures/adr-repo-2/docs/adr/0001-first-decision.md` — same filename as the main fixture's, to exercise cross-repository scoping (Edge Case)
+- [X] T001 [P] Create the ADR fixture repository at `backend/tests/integration/fixtures/adr-repo/`: `docs/adr/0001-first-decision.md` (plain, `Status: accepted`, no relationships); `docs/adr/0002-second-decision.md` (`Status: superseded by [0003-third-decision](0003-third-decision.md)`); `docs/adr/0003-third-decision.md` (`Status: accepted`, with a `## Links` section containing `Supersedes [0002-second-decision](0002-second-decision.md)` — the *same* logical relationship stated from both sides, to exercise dedup); `docs/adr/broken.md` (body text with no `#` title heading); `docs/adr/secret-leak.md` (a valid title/status, with an `AKIA`-shaped token planted in its body); `docs/adr/diagram.png` (a non-Markdown file, to exercise silent exclusion per FR-002); plus `service-a/package.json` and `service-b/package.json` (two real manifests in the same repository, to exercise the many-to-many service association). Also create a second, unrelated fixture repository at `backend/tests/integration/fixtures/adr-repo-2/docs/adr/0001-first-decision.md` — same filename as the main fixture's, to exercise cross-repository scoping (Edge Case)
 
 ---
 
@@ -36,10 +36,10 @@ Constitution Principle V, same as features 001-003.
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 [P] Create the `AdrRecord` model in `backend/src/models/adr_record.py` per data-model.md: `id` PK; `title` not null; `raw_status` nullable; `normalized_status` not null; `date` nullable; `source_path` not null unique; `repository_path` not null; `content` not null; `has_secret_warning` boolean not null default `false`
-- [ ] T003 [P] Create the `AdrRelationship` model in `backend/src/models/adr_relationship.py` per data-model.md: `id` PK; `from_adr_id`/`to_adr_id` FK → `AdrRecord.id` not null `ON DELETE CASCADE`; `relationship_type` one of `supersedes`/`amends`
-- [ ] T004 [P] Create the `AdrServiceAssociation` model in `backend/src/models/adr_service_association.py` per data-model.md: `id` PK; `adr_id` FK → `AdrRecord.id` not null `ON DELETE CASCADE`; `service_id` FK → `Service.id` not null `ON DELETE CASCADE`; unique on `(adr_id, service_id)`
-- [ ] T005 [P] Create the `AdrImportIssue` model in `backend/src/models/adr_import_issue.py` per data-model.md: `id` PK; `path` not null; `reason` not null; `detected_at` not null
+- [X] T002 [P] Create the `AdrRecord` model in `backend/src/models/adr_record.py` per data-model.md: `id` PK; `title` not null; `raw_status` nullable; `normalized_status` not null; `date` nullable; `source_path` not null unique; `repository_path` not null; `content` not null; `has_secret_warning` boolean not null default `false`
+- [X] T003 [P] Create the `AdrRelationship` model in `backend/src/models/adr_relationship.py` per data-model.md: `id` PK; `from_adr_id`/`to_adr_id` FK → `AdrRecord.id` not null `ON DELETE CASCADE`; `relationship_type` one of `supersedes`/`amends`
+- [X] T004 [P] Create the `AdrServiceAssociation` model in `backend/src/models/adr_service_association.py` per data-model.md: `id` PK; `adr_id` FK → `AdrRecord.id` not null `ON DELETE CASCADE`; `service_id` FK → `Service.id` not null `ON DELETE CASCADE`; unique on `(adr_id, service_id)`
+- [X] T005 [P] Create the `AdrImportIssue` model in `backend/src/models/adr_import_issue.py` per data-model.md: `id` PK; `path` not null; `reason` not null; `detected_at` not null
 
 **Checkpoint**: Foundation ready — user story implementation can now begin
 
@@ -57,23 +57,23 @@ title/status/date, `broken.md` does not appear as an ADR, and
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T006 [P] [US1] Unit test for MADR field extraction and status normalization in `backend/tests/unit/test_adr_markdown.py` per research.md §3-4: title from the first `#` heading; `* Status:`/`* Date:` bullet extraction; `superseded` takes priority over other status keywords; a missing title raises the existing `ManifestParseError`; a missing/malformed date line leaves `date` as `None` rather than guessing
-- [ ] T007 [P] [US1] Unit test for the secret-pattern heuristic in `backend/tests/unit/test_adr_secrets.py` per research.md §8: each of the 3 fixed patterns (private-key header, AWS access key, generic credential assignment) is detected; ordinary prose is not flagged
-- [ ] T008 [P] [US1] Contract test asserting the extended `POST /api/scan` response includes `adrs_found` in `backend/tests/contract/test_scan_endpoint.py`
-- [ ] T009 [P] [US1] Contract test for `GET /api/adrs` in `backend/tests/contract/test_adrs_endpoint.py` per contracts/api.md
-- [ ] T010 [US1] Integration test in `backend/tests/integration/test_adr_scan.py`: scan the T001 fixture repository, assert exactly 4 `AdrRecord` rows with correct title/normalized_status/date, `broken.md` produces an `AdrImportIssue` instead of a record, `secret-leak.md`'s record has `has_secret_warning=True`, and `diagram.png` produces neither a record nor an issue (FR-002); then scan both `adr-repo` and `adr-repo-2` together and assert their same-named `0001-first-decision.md` files remain two distinct records, scoped by `source_path` (Edge Case); then, in a mutable copy, add a new ADR file and delete one of the existing ones, re-scan, and assert the new one appears while the deleted one's record is gone (FR-012/SC-006)
+- [X] T006 [P] [US1] Unit test for MADR field extraction and status normalization in `backend/tests/unit/test_adr_markdown.py` per research.md §3-4: title from the first `#` heading; `* Status:`/`* Date:` bullet extraction; `superseded` takes priority over other status keywords; a missing title raises the existing `ManifestParseError`; a missing/malformed date line leaves `date` as `None` rather than guessing
+- [X] T007 [P] [US1] Unit test for the secret-pattern heuristic in `backend/tests/unit/test_adr_secrets.py` per research.md §8: each of the 3 fixed patterns (private-key header, AWS access key, generic credential assignment) is detected; ordinary prose is not flagged
+- [X] T008 [P] [US1] Contract test asserting the extended `POST /api/scan` response includes `adrs_found` in `backend/tests/contract/test_scan_endpoint.py`
+- [X] T009 [P] [US1] Contract test for `GET /api/adrs` in `backend/tests/contract/test_adrs_endpoint.py` per contracts/api.md
+- [X] T010 [US1] Integration test in `backend/tests/integration/test_adr_scan.py`: scan the T001 fixture repository, assert exactly 4 `AdrRecord` rows with correct title/normalized_status/date, `broken.md` produces an `AdrImportIssue` instead of a record, `secret-leak.md`'s record has `has_secret_warning=True`, and `diagram.png` produces neither a record nor an issue (FR-002); then scan both `adr-repo` and `adr-repo-2` together and assert their same-named `0001-first-decision.md` files remain two distinct records, scoped by `source_path` (Edge Case); then, in a mutable copy, add a new ADR file and delete one of the existing ones, re-scan, and assert the new one appears while the deleted one's record is gone (FR-012/SC-006)
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implement `backend/src/scanning/parsers/adr_markdown.py`: `parse(path) -> AdrFields` extracting title/raw_status/normalized_status/date/content per research.md §3-4, raising `ManifestParseError` when no title heading is found
-- [ ] T012 [P] [US1] Implement `backend/src/scanning/adr_secrets.py`: `check_for_secrets(content) -> bool` applying the three research.md §8 patterns
-- [ ] T013 [US1] Add `find_adr_files()` to `backend/src/scanning/walker.py`: walk a root yielding every `.md` file directly inside a `docs/adr` directory, same exclusion pruning as the other walkers
-- [ ] T014 [US1] Extend `run_scan` in `backend/src/scanning/scan_service.py` to also call `find_adr_files`, parse each via `adr_markdown` (T011), run the secrets check (T012), isolate parse failures as `AdrImportIssue` rows, and persist `AdrRecord` rows in the same transaction as the registry (depends on T002, T005, T011, T012, T013)
-- [ ] T015 [US1] Extend the `POST /api/scan` response model and handler in `backend/src/api/scan.py` to include `adrs_found` per contracts/api.md (depends on T014)
-- [ ] T016 [US1] Implement `GET /api/adrs` in `backend/src/api/adrs.py` per contracts/api.md
-- [ ] T017 [P] [US1] Extend the frontend `ScanResponse` type and `triggerScan()` handling for `adrs_found`, and add `listAdrs()` in `frontend/src/services/api.ts`
-- [ ] T018 [P] [US1] Implement `AdrTable` component in `frontend/src/components/AdrTable.tsx`
-- [ ] T019 [US1] Implement `AdrsPage` in `frontend/src/pages/AdrsPage.tsx` and add a navigation entry from `RegistryPage` (depends on T017, T018)
+- [X] T011 [US1] Implement `backend/src/scanning/parsers/adr_markdown.py`: `parse(path) -> AdrFields` extracting title/raw_status/normalized_status/date/content per research.md §3-4, raising `ManifestParseError` when no title heading is found
+- [X] T012 [P] [US1] Implement `backend/src/scanning/adr_secrets.py`: `check_for_secrets(content) -> bool` applying the three research.md §8 patterns
+- [X] T013 [US1] Add `find_adr_files()` to `backend/src/scanning/walker.py`: walk a root yielding every `.md` file directly inside a `docs/adr` directory, same exclusion pruning as the other walkers
+- [X] T014 [US1] Extend `run_scan` in `backend/src/scanning/scan_service.py` to also call `find_adr_files`, parse each via `adr_markdown` (T011), run the secrets check (T012), isolate parse failures as `AdrImportIssue` rows, and persist `AdrRecord` rows in the same transaction as the registry (depends on T002, T005, T011, T012, T013)
+- [X] T015 [US1] Extend the `POST /api/scan` response model and handler in `backend/src/api/scan.py` to include `adrs_found` per contracts/api.md (depends on T014)
+- [X] T016 [US1] Implement `GET /api/adrs` in `backend/src/api/adrs.py` per contracts/api.md
+- [X] T017 [P] [US1] Extend the frontend `ScanResponse` type and `triggerScan()` handling for `adrs_found`, and add `listAdrs()` in `frontend/src/services/api.ts`
+- [X] T018 [P] [US1] Implement `AdrTable` component in `frontend/src/components/AdrTable.tsx`
+- [X] T019 [US1] Implement `AdrsPage` in `frontend/src/pages/AdrsPage.tsx` and add a navigation entry from `RegistryPage` (depends on T017, T018)
 
 **Checkpoint**: User Story 1 is independently functional — this is the MVP for this feature.
 

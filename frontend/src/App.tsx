@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AdrsPage from './pages/AdrsPage'
 import CompatibilityPage from './pages/CompatibilityPage'
 import ConnectionsPage from './pages/ConnectionsPage'
 import ErrorGroupDetailPage from './pages/ErrorGroupDetailPage'
@@ -17,6 +18,7 @@ type View =
   | { name: 'logs' }
   | { name: 'error-group-detail'; groupId: number }
   | { name: 'log-scan-issues' }
+  | { name: 'adrs' }
 
 function App() {
   const [view, setView] = useState<View>({ name: 'registry' })
@@ -55,6 +57,10 @@ function App() {
     return <LogScanIssuesPage onBack={() => setView({ name: 'logs' })} />
   }
 
+  if (view.name === 'adrs') {
+    return <AdrsPage onBack={() => setView({ name: 'registry' })} />
+  }
+
   if (view.name === 'logs') {
     return (
       <LogsPage
@@ -72,6 +78,7 @@ function App() {
       onViewCompatibility={() => setView({ name: 'compatibility' })}
       onViewConnections={() => setView({ name: 'connections' })}
       onViewLogs={() => setView({ name: 'logs' })}
+      onViewAdrs={() => setView({ name: 'adrs' })}
     />
   )
 }

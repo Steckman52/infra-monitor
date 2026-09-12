@@ -9,6 +9,7 @@ interface RegistryPageProps {
   onViewCompatibility: () => void;
   onViewConnections: () => void;
   onViewLogs: () => void;
+  onViewAdrs: () => void;
 }
 
 function RegistryPage({
@@ -17,6 +18,7 @@ function RegistryPage({
   onViewCompatibility,
   onViewConnections,
   onViewLogs,
+  onViewAdrs,
 }: RegistryPageProps) {
   const [services, setServices] = useState<ServiceSummary[]>([]);
   const [lastScanSummary, setLastScanSummary] = useState<ScanResponse | null>(null);
@@ -56,11 +58,14 @@ function RegistryPage({
       <button type="button" onClick={onViewLogs}>
         View log errors
       </button>
+      <button type="button" onClick={onViewAdrs}>
+        View ADRs
+      </button>
       <ScanButton onScanComplete={handleScanComplete} />
       {lastScanSummary && (
         <p className="scan-summary">
           Found {lastScanSummary.services_found} service(s), {lastScanSummary.issues_found}{' '}
-          issue(s).
+          issue(s), {lastScanSummary.adrs_found} ADR(s).
           {lastScanSummary.unreachable_roots.length > 0 && (
             <> Unreachable roots: {lastScanSummary.unreachable_roots.join(', ')}</>
           )}

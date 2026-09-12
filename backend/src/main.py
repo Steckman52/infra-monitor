@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.api import (
+    adrs,
     compatibility,
     connections,
     error_groups,
@@ -30,3 +31,4 @@ app.include_router(connections.router)
 app.include_router(log_scan.router)
 app.include_router(error_groups.router)
 app.include_router(log_scan_issues.router)
+app.include_router(adrs.router)

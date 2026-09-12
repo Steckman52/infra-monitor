@@ -16,6 +16,7 @@ class ScanResponse(BaseModel):
     services_found: int
     issues_found: int
     unreachable_roots: list[str]
+    adrs_found: int
 
 
 @router.post("/scan", response_model=ScanResponse)
@@ -25,4 +26,5 @@ def trigger_scan(request: ScanRequest, session: Session = Depends(get_session)) 
         services_found=summary.services_found,
         issues_found=summary.issues_found,
         unreachable_roots=summary.unreachable_roots,
+        adrs_found=summary.adrs_found,
     )

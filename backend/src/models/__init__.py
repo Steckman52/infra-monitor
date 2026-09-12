@@ -1,3 +1,7 @@
+from src.models.adr_import_issue import AdrImportIssue  # noqa: F401
+from src.models.adr_record import AdrRecord  # noqa: F401
+from src.models.adr_relationship import AdrRelationship  # noqa: F401
+from src.models.adr_service_association import AdrServiceAssociation  # noqa: F401
 from src.models.dependency import Dependency  # noqa: F401
 from src.models.error_group import ErrorGroup  # noqa: F401
 from src.models.error_occurrence import ErrorOccurrence  # noqa: F401

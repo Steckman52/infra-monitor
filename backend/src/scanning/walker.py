@@ -57,3 +57,17 @@ def find_log_files(root: Path) -> Iterator[Path]:
             path = Path(dirpath) / filename
             if path.suffix.lower() in LOG_FILE_EXTENSIONS:
                 yield path
+
+
+def find_adr_files(root: Path) -> Iterator[Path]:
+    """Walk `root`, yielding every Markdown file directly inside a
+    `docs/adr` directory (004 FR-002) — same exclusion pruning as
+    find_manifests. Non-Markdown files in that same directory (e.g. a
+    diagram) are silently excluded, not reported."""
+    for dirpath, dirnames, filenames in os.walk(root, topdown=True):
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIR_NAMES]
+        dir_path = Path(dirpath)
+        if dir_path.name == "adr" and dir_path.parent.name == "docs":
+            for filename in filenames:
+                if filename.lower().endswith(".md"):
+                    yield dir_path / filename

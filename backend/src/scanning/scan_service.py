@@ -4,16 +4,19 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from src.models.adr_import_issue import AdrImportIssue
+from src.models.adr_record import AdrRecord
 from src.models.dependency import Dependency
 from src.models.external_node import ExternalNode
 from src.models.scan_issue import ScanIssue
 from src.models.service import Service
 from src.models.service_connection import ServiceConnection
 from src.scanning import name_resolution
+from src.scanning.adr_secrets import check_for_secrets
 from src.scanning.connection_graph import build_graph_for_compose
 from src.scanning.parsed_manifest import ManifestParseError
-from src.scanning.parsers import composer_json, docker_compose, go_mod, package_json, pom_xml, requirements_txt
-from src.scanning.walker import find_docker_compose_files, find_manifests
+from src.scanning.parsers import adr_markdown, composer_json, docker_compose, go_mod, package_json, pom_xml, requirements_txt
+from src.scanning.walker import find_adr_files, find_docker_compose_files, find_manifests
 
 _PARSERS = {
     "node": package_json.parse,
@@ -29,13 +32,15 @@ class ScanSummary:
     services_found: int
     issues_found: int
     unreachable_roots: list[str]
+    adrs_found: int = 0
 
 
 def run_scan(session: Session, roots: list[str]) -> ScanSummary:
-    """Scan `roots` for manifests and docker-compose.yml files, replacing the
-    registry's, external nodes', and connections' contents in one
-    transaction (research.md §8/002 §1), so a re-scan always reflects the
-    current state of the repositories (FR-014 / 002 FR-015).
+    """Scan `roots` for manifests, docker-compose.yml files, and
+    docs/adr/*.md files, replacing the registry's, external nodes',
+    connections', and ADRs' contents in one transaction (research.md
+    §8/002 §1/004 §1-2), so a re-scan always reflects the current state
+    of the repositories (FR-014 / 002 FR-015 / 004 FR-012).
     """
     now = datetime.now(timezone.utc)
     existing_names: set[str] = set()
@@ -43,6 +48,7 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     issues_to_add: list[ScanIssue] = []
     unreachable_roots: list[str] = []
     compose_files: list[Path] = []
+    adr_files: list[Path] = []
 
     for root in roots:
         root_path = Path(root)
@@ -108,6 +114,7 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
                 )
 
         compose_files.extend(find_docker_compose_files(root_path))
+        adr_files.extend(find_adr_files(root_path))
 
     # 002 FR-009: match docker-compose service blocks to the services just
     # scanned above by resolved build-context path (in-memory; these Service
@@ -143,6 +150,37 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
         external_nodes_to_add.extend(result.external_nodes)
         connections_to_add.extend(result.connections)
 
+    # 004 FR-002/FR-008: every docs/adr/*.md is one ADR; a parse failure
+    # (no title) is isolated as its own AdrImportIssue, never a ScanIssue --
+    # kept in a dedicated table so this scan and the registry scan can
+    # never clobber each other's issue history (004 ADR 0007-in-spirit).
+    adrs_to_add: list[AdrRecord] = []
+    adr_issues_to_add: list[AdrImportIssue] = []
+
+    for adr_path in adr_files:
+        # repository root = grandparent of docs/adr (research.md §7).
+        repository_path = str(adr_path.parent.parent.parent)
+        try:
+            fields = adr_markdown.parse(adr_path)
+        except ManifestParseError as exc:
+            adr_issues_to_add.append(
+                AdrImportIssue(path=str(adr_path), reason=exc.reason, detected_at=now)
+            )
+            continue
+
+        adrs_to_add.append(
+            AdrRecord(
+                title=fields.title,
+                raw_status=fields.raw_status,
+                normalized_status=fields.normalized_status,
+                date=fields.date,
+                source_path=str(adr_path),
+                repository_path=repository_path,
+                content=fields.content,
+                has_secret_warning=check_for_secrets(fields.content),
+            )
+        )
+
     # Replace all prior scan results in one transaction. Children first, since
     # SQLite enforces FK constraints and bulk deletes bypass ORM cascades.
     session.query(ServiceConnection).delete()
@@ -150,14 +188,19 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     session.query(Dependency).delete()
     session.query(ExternalNode).delete()
     session.query(Service).delete()
+    session.query(AdrImportIssue).delete()
+    session.query(AdrRecord).delete()
     session.add_all(services_to_add)
     session.add_all(issues_to_add)
     session.add_all(external_nodes_to_add)
     session.add_all(connections_to_add)
+    session.add_all(adrs_to_add)
+    session.add_all(adr_issues_to_add)
     session.commit()
 
     return ScanSummary(
         services_found=len(services_to_add),
         issues_found=len(issues_to_add),
         unreachable_roots=unreachable_roots,
+        adrs_found=len(adrs_to_add),
     )

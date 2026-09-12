@@ -6,6 +6,7 @@ def test_post_scan_returns_summary_shape(client, fixtures_dir):
     assert isinstance(body["services_found"], int)
     assert isinstance(body["issues_found"], int)
     assert isinstance(body["unreachable_roots"], list)
+    assert isinstance(body["adrs_found"], int)
 
 
 def test_post_scan_reports_unreachable_root(client, fixtures_dir):

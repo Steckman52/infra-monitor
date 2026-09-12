@@ -10,6 +10,17 @@ export interface ScanResponse {
   services_found: number;
   issues_found: number;
   unreachable_roots: string[];
+  adrs_found: number;
+}
+
+export interface AdrSummary {
+  id: number;
+  title: string;
+  normalized_status: string;
+  raw_status: string | null;
+  date: string | null;
+  source_path: string;
+  has_secret_warning: boolean;
 }
 
 export interface Dependency {
@@ -179,4 +190,9 @@ export async function getErrorGroupDetail(id: number): Promise<ErrorGroupDetail>
 export async function listLogScanIssues(): Promise<LogScanIssue[]> {
   const response = await fetch('/api/log-scan-issues');
   return parseJsonOrThrow<LogScanIssue[]>(response);
+}
+
+export async function listAdrs(): Promise<AdrSummary[]> {
+  const response = await fetch('/api/adrs');
+  return parseJsonOrThrow<AdrSummary[]>(response);
 }
