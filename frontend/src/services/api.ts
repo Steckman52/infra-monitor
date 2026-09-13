@@ -129,6 +129,7 @@ export interface NodeConnections {
 export interface LogScanResponse {
   error_groups_found: number;
   issues_found: number;
+  root_unreachable: boolean;
 }
 
 export interface ErrorGroupSummary {
@@ -169,7 +170,16 @@ export interface DashboardSummary {
 
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
+    let detail: string | undefined;
+    try {
+      const body = await response.json();
+      if (body && typeof body.detail === 'string') {
+        detail = body.detail;
+      }
+    } catch {
+      // Response body wasn't JSON (or was empty) -- fall through to the generic message.
+    }
+    throw new Error(detail ?? `Request failed with status ${response.status}`);
   }
   return (await response.json()) as T;
 }

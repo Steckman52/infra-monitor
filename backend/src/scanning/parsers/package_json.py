@@ -13,6 +13,9 @@ def parse(path: Path) -> ParsedManifest:
     except (json.JSONDecodeError, ValueError, OSError) as exc:
         raise ManifestParseError(f"Invalid JSON: {exc}") from exc
 
+    if not isinstance(data, dict):
+        raise ManifestParseError("package.json does not contain a JSON object")
+
     name = data.get("name")
     deps_raw = data.get("dependencies") or {}
     dependencies = [

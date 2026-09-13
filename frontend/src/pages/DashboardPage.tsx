@@ -12,7 +12,13 @@ interface DashboardPageProps {
 }
 
 function formatTimestamp(value: string | null): string {
-  return value ? new Date(value).toLocaleString() : 'never';
+  if (!value) return 'never';
+  // The backend always emits UTC timestamps, but SQLite/SQLAlchemy's plain
+  // DateTime column strips the offset on round-trip, so the ISO string
+  // arrives with no 'Z'/offset -- without this, JS parses a date-*time*
+  // string (unlike a date-only one) as local time, not UTC.
+  const hasOffset = /Z$|[+-]\d{2}:\d{2}$/.test(value);
+  return new Date(hasOffset ? value : `${value}Z`).toLocaleString();
 }
 
 function DashboardPage({

@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from src.analysis.version_compatibility import compute_compatibility, risks_for_service
+from src.api.adrs import RelatedAdr
 from src.api.connections import ConnectionOut, build_adjacency
 from src.api.error_groups import ErrorGroupSummary, to_summary as error_group_to_summary
 from src.db import get_session
@@ -49,11 +50,6 @@ class CompatibilityRiskOut(BaseModel):
     conflicting_with: list[ConflictingServiceOut]
 
 
-class RelatedAdrOut(BaseModel):
-    adr_id: int
-    title: str
-
-
 class ServiceDetail(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -67,7 +63,7 @@ class ServiceDetail(BaseModel):
     dependencies: list[DependencyOut]
     compatibility_risks: list[CompatibilityRiskOut]
     connections: list[ConnectionOut]
-    related_adrs: list[RelatedAdrOut]
+    related_adrs: list[RelatedAdr]
     recent_error_groups: list[ErrorGroupSummary]
 
 
@@ -94,7 +90,7 @@ def get_service_detail(service_id: int, session: Session = Depends(get_session))
     associations = (
         session.query(AdrServiceAssociation).filter(AdrServiceAssociation.service_id == service_id).all()
     )
-    related_adrs = [RelatedAdrOut(adr_id=a.adr_id, title=a.adr.title) for a in associations]
+    related_adrs = [RelatedAdr(adr_id=a.adr_id, title=a.adr.title) for a in associations]
     error_groups = (
         session.query(ErrorGroup)
         .filter(ErrorGroup.service_id == service_id)

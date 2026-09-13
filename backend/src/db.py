@@ -18,6 +18,10 @@ def make_engine(db_path: Path = DEFAULT_DB_PATH):
     def _enable_foreign_keys(dbapi_connection, _connection_record):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
+        # Give a second, overlapping scan a real window to finish instead of
+        # failing immediately on SQLite's default ~5s wait when this
+        # connection's writer lock is briefly held by another one.
+        cursor.execute("PRAGMA busy_timeout=15000")
         cursor.close()
 
     return engine

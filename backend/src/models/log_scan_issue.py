@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db import Base
 
-LOG_SCAN_ISSUE_TYPES = {"unattributed", "unreadable"}
+LOG_SCAN_ISSUE_TYPES = {"unattributed", "unreadable", "unreachable_path"}
 
 
 class LogScanIssue(Base):

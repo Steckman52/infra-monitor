@@ -9,6 +9,20 @@ def test_post_scan_returns_summary_shape(client, fixtures_dir):
     assert isinstance(body["adrs_found"], int)
 
 
+def test_post_scan_returns_503_when_database_is_locked(client, monkeypatch):
+    def _raise_locked(*args, **kwargs):
+        from sqlalchemy.exc import OperationalError
+
+        raise OperationalError("statement", {}, Exception("database is locked"))
+
+    monkeypatch.setattr("src.api.scan.run_scan", _raise_locked)
+
+    response = client.post("/api/scan", json={"roots": []})
+
+    assert response.status_code == 503
+    assert "already in progress" in response.json()["detail"]
+
+
 def test_post_scan_reports_unreachable_root(client, fixtures_dir):
     missing_root = str(fixtures_dir / "does-not-exist")
 

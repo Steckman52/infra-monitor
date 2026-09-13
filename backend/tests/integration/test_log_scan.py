@@ -1,6 +1,7 @@
 import shutil
 
 from src.models.error_group import ErrorGroup
+from src.models.log_scan_issue import LogScanIssue
 from src.scanning.log_scan_service import run_log_scan
 from src.scanning.scan_service import run_scan
 
@@ -58,3 +59,34 @@ def test_rescan_adds_new_group_without_duplicating_existing(tmp_path, db_session
     assert any("Totally new failure mode" in g.normalized_template for g in second_pass)
     conn_refused_after = next(g for g in second_pass if "Connection refused" in g.normalized_template)
     assert conn_refused_after.occurrence_count == 12  # not duplicated (FR-015/SC-005)
+
+
+def test_email_addresses_are_redacted_before_storage(tmp_path, db_session):
+    log_dir = tmp_path / "logs" / "some-service"
+    log_dir.mkdir(parents=True)
+    (log_dir / "app.log").write_text(
+        "2026-09-01 03:15:00 ERROR Login failed for john.doe@example.com\n",
+        encoding="utf-8",
+    )
+
+    run_log_scan(db_session, str(tmp_path / "logs"))
+
+    group = db_session.query(ErrorGroup).one()
+    assert "john.doe@example.com" not in group.normalized_template
+    assert "john.doe@example.com" not in group.example_text
+    assert "[REDACTED_EMAIL]" in group.example_text
+    occurrence = group.occurrences[0]
+    assert "john.doe@example.com" not in occurrence.raw_text
+    assert "[REDACTED_EMAIL]" in occurrence.raw_text
+
+
+def test_nonexistent_root_reports_unreachable_instead_of_silent_zero(db_session, fixtures_dir):
+    missing_root = str(fixtures_dir / "does-not-exist")
+
+    summary = run_log_scan(db_session, missing_root)
+
+    assert summary.error_groups_found == 0
+    assert summary.root_unreachable is True
+
+    issues = db_session.query(LogScanIssue).all()
+    assert any(i.issue_type == "unreachable_path" and i.path == missing_root for i in issues)

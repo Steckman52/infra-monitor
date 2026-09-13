@@ -1,3 +1,6 @@
+import pytest
+
+from src.scanning.parsed_manifest import ManifestParseError
 from src.scanning.parsers import requirements_txt
 
 
@@ -15,3 +18,11 @@ def test_parses_pinned_and_range_dependencies(tmp_path):
     assert ("flask", "==2.3.2") in names_versions
     assert ("requests", ">=2.31.0") in names_versions
     assert len(result.dependencies) == 2  # comment/-r/-e lines are skipped, not deps
+
+
+def test_non_utf8_bytes_raise_manifest_parse_error(tmp_path):
+    manifest = tmp_path / "requirements.txt"
+    manifest.write_bytes(b"flask==2.3.2\n\xff\xfe invalid utf-8 bytes")
+
+    with pytest.raises(ManifestParseError):
+        requirements_txt.parse(manifest)

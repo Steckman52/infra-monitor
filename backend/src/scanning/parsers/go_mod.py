@@ -10,7 +10,7 @@ _REQUIRE_ENTRY_RE = re.compile(r"^(\S+)\s+(\S+)")
 def parse(path: Path) -> ParsedManifest:
     try:
         text = path.read_text(encoding="utf-8")
-    except OSError as exc:
+    except (UnicodeDecodeError, OSError) as exc:
         raise ManifestParseError(f"Cannot read file: {exc}") from exc
 
     if not text.strip():

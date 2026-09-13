@@ -74,3 +74,19 @@ def test_invalid_yaml_raises_manifest_parse_error(tmp_path):
 
     with pytest.raises(ManifestParseError):
         docker_compose.parse(compose)
+
+
+def test_non_mapping_services_raises_manifest_parse_error(tmp_path):
+    compose = tmp_path / "docker-compose.yml"
+    compose.write_text("services:\n  - api\n  - db\n", encoding="utf-8")
+
+    with pytest.raises(ManifestParseError):
+        docker_compose.parse(compose)
+
+
+def test_non_mapping_service_block_raises_manifest_parse_error(tmp_path):
+    compose = tmp_path / "docker-compose.yml"
+    compose.write_text("services:\n  api: not-a-mapping\n", encoding="utf-8")
+
+    with pytest.raises(ManifestParseError):
+        docker_compose.parse(compose)

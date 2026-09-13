@@ -11,6 +11,7 @@ from src.models.scan_metadata import record_scan
 from src.models.service import Service
 from src.scanning.error_detection import detect_errors, extract_timestamp
 from src.scanning.normalization import normalize_template
+from src.scanning.pii_redaction import redact_pii
 from src.scanning.walker import find_log_files
 
 MAX_STORED_OCCURRENCES_PER_GROUP = 20
@@ -20,6 +21,7 @@ MAX_STORED_OCCURRENCES_PER_GROUP = 20
 class LogScanSummary:
     error_groups_found: int
     issues_found: int
+    root_unreachable: bool = False
 
 
 def run_log_scan(session: Session, root: str) -> LogScanSummary:
@@ -28,6 +30,26 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
     log_scan_issues in one transaction (research.md §1, §3)."""
     now = datetime.now(timezone.utc)
     root_path = Path(root)
+
+    if not root_path.is_dir():
+        # Mirrors run_scan's unreachable_roots handling (scan_service.py) --
+        # a bad path is reported, not silently indistinguishable from "no
+        # errors found".
+        session.query(ErrorOccurrence).delete()
+        session.query(LogScanIssue).delete()
+        session.query(ErrorGroup).delete()
+        session.add(
+            LogScanIssue(
+                path=root,
+                issue_type="unreachable_path",
+                reason=f"Root path does not exist or is not a directory: {root}",
+                detected_at=now,
+            )
+        )
+        record_scan(session, "log", now)
+        session.commit()
+        return LogScanSummary(error_groups_found=0, issues_found=1, root_unreachable=True)
+
     services_by_name = {service.name: service for service in session.query(Service).all()}
 
     groups: dict[tuple, dict] = {}
@@ -63,7 +85,13 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
 
         service_id = matched_service.id if matched_service else None
         for entry in detect_errors(text.splitlines()):
-            template = normalize_template(entry.first_line)
+            # Constitution Principle III: redact email-shaped substrings
+            # before anything derived from this entry is stored or grouped
+            # (see docs/adr/0011-*.md) -- applied once here so the template,
+            # the group's example, and every sampled occurrence all inherit it.
+            redacted_first_line = redact_pii(entry.first_line)
+            redacted_raw_text = redact_pii(entry.raw_text)
+            template = normalize_template(redacted_first_line)
             timestamp = extract_timestamp(entry.first_line)
             key = (service_id, unattributed_source_path, template)
 
@@ -77,7 +105,7 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
                     "occurrence_count": 0,
                     "first_seen": None,
                     "last_seen": None,
-                    "example_text": entry.raw_text,
+                    "example_text": redacted_raw_text,
                     "occurrences": [],
                 },
             )
@@ -91,7 +119,7 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
                 # research.md §7: bounded sample; occurrence_count still tracks the true total.
                 group["occurrences"].append(
                     {
-                        "raw_text": entry.raw_text,
+                        "raw_text": redacted_raw_text,
                         "occurred_at": timestamp,
                         "source_log_path": str(log_path),
                         "line_number": entry.start_line_number,

@@ -26,3 +26,11 @@ def test_missing_module_directive_raises(tmp_path):
 
     with pytest.raises(ManifestParseError):
         go_mod.parse(manifest)
+
+
+def test_non_utf8_bytes_raise_manifest_parse_error(tmp_path):
+    manifest = tmp_path / "go.mod"
+    manifest.write_bytes(b"module x\n\xff\xfe invalid utf-8 bytes")
+
+    with pytest.raises(ManifestParseError):
+        go_mod.parse(manifest)

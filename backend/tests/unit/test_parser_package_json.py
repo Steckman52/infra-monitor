@@ -36,3 +36,11 @@ def test_invalid_json_raises_manifest_parse_error(tmp_path):
 
     with pytest.raises(ManifestParseError):
         package_json.parse(manifest)
+
+
+def test_non_object_json_raises_manifest_parse_error(tmp_path):
+    manifest = tmp_path / "package.json"
+    manifest.write_text("[1, 2, 3]", encoding="utf-8")
+
+    with pytest.raises(ManifestParseError):
+        package_json.parse(manifest)

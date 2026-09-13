@@ -39,6 +39,151 @@ class ScanSummary:
     adrs_found: int = 0
 
 
+def _unparsable_issue(exc: ManifestParseError, path: Path, repository_path: str, now: datetime) -> ScanIssue:
+    """Shared shape for the two 'a manifest-like file failed to parse'
+    cases (a package manifest, or a docker-compose.yml) -- isolates the
+    failure as one ScanIssue row instead of aborting the scan."""
+    return ScanIssue(
+        manifest_path=str(path),
+        repository_path=repository_path,
+        issue_type="unparsable",
+        reason=exc.reason,
+        detected_at=now,
+    )
+
+
+def _scan_manifests(
+    root_path: Path, existing_names: set[str], now: datetime
+) -> tuple[list[Service], list[ScanIssue]]:
+    """FR-007/FR-008/FR-009: parse every manifest under `root_path`,
+    isolating a parse failure or incomplete data as its own ScanIssue
+    without aborting the rest of the scan."""
+    services_to_add: list[Service] = []
+    issues_to_add: list[ScanIssue] = []
+
+    for manifest_path, ecosystem in find_manifests(root_path):
+        repository_path = str(manifest_path.parent)
+        try:
+            parsed = _PARSERS[ecosystem](manifest_path)
+        except ManifestParseError as exc:
+            issues_to_add.append(_unparsable_issue(exc, manifest_path, repository_path, now))
+            continue
+
+        resolved_name = name_resolution.resolve_name(parsed.name, manifest_path, existing_names)
+        existing_names.add(resolved_name)
+
+        service = Service(
+            name=resolved_name,
+            ecosystem=ecosystem,
+            repository_path=repository_path,
+            manifest_path=str(manifest_path),
+            is_complete=parsed.is_complete,
+            last_scanned_at=now,
+        )
+        service.dependencies = [
+            Dependency(name=dep.name, declared_version=dep.declared_version)
+            for dep in parsed.dependencies
+        ]
+        services_to_add.append(service)
+
+        if not parsed.is_complete:
+            # FR-009: still registered, but flagged and explained.
+            issues_to_add.append(
+                ScanIssue(
+                    manifest_path=str(manifest_path),
+                    repository_path=repository_path,
+                    issue_type="incomplete_data",
+                    reason=parsed.incomplete_reason or "Manifest is missing required data",
+                    service=service,
+                    detected_at=now,
+                )
+            )
+
+    return services_to_add, issues_to_add
+
+
+def _scan_compose(
+    compose_files: list[Path], services_by_build_context: dict[Path, Service], now: datetime
+) -> tuple[list[ExternalNode], list[ServiceConnection], list[ScanIssue]]:
+    """002 FR-009/FR-013: build the connection graph from every
+    docker-compose.yml found, isolating a parse failure the same way
+    manifest failures are."""
+    external_nodes_to_add: list[ExternalNode] = []
+    connections_to_add: list[ServiceConnection] = []
+    issues_to_add: list[ScanIssue] = []
+
+    for compose_path in compose_files:
+        repository_path = str(compose_path.parent)
+        try:
+            parsed_compose = docker_compose.parse(compose_path)
+        except ManifestParseError as exc:
+            issues_to_add.append(_unparsable_issue(exc, compose_path, repository_path, now))
+            continue
+
+        result = build_graph_for_compose(
+            parsed_compose, compose_path, repository_path, services_by_build_context
+        )
+        external_nodes_to_add.extend(result.external_nodes)
+        connections_to_add.extend(result.connections)
+
+    return external_nodes_to_add, connections_to_add, issues_to_add
+
+
+def _scan_adrs(adr_files: list[Path], now: datetime) -> tuple[list[AdrRecord], list[AdrImportIssue]]:
+    """004 FR-002/FR-008: every docs/adr/*.md is one ADR; a parse failure
+    (no title) is isolated as its own AdrImportIssue, never a ScanIssue --
+    kept in a dedicated table so this scan and the registry scan can never
+    clobber each other's issue history (004 ADR 0007-in-spirit)."""
+    adrs_to_add: list[AdrRecord] = []
+    adr_issues_to_add: list[AdrImportIssue] = []
+
+    for adr_path in adr_files:
+        # repository root = grandparent of docs/adr (research.md §7).
+        repository_path = str(adr_path.parent.parent.parent)
+        try:
+            fields = adr_markdown.parse(adr_path)
+        except ManifestParseError as exc:
+            adr_issues_to_add.append(
+                AdrImportIssue(path=str(adr_path), reason=exc.reason, detected_at=now)
+            )
+            continue
+
+        adrs_to_add.append(
+            AdrRecord(
+                title=fields.title,
+                raw_status=fields.raw_status,
+                normalized_status=fields.normalized_status,
+                date=fields.date,
+                source_path=str(adr_path),
+                repository_path=repository_path,
+                content=fields.content,
+                has_secret_warning=check_for_secrets(fields.content),
+            )
+        )
+
+    return adrs_to_add, adr_issues_to_add
+
+
+def _resolve_adr_associations(
+    adrs_to_add: list[AdrRecord], services_to_add: list[Service]
+) -> list[AdrServiceAssociation]:
+    """004 FR-006: associate each ADR with every service registered under
+    its own repository root (research.md §7) -- derived only from
+    in-memory objects, since none of this has an id yet before the
+    transaction below commits."""
+    associations_to_add: list[AdrServiceAssociation] = []
+    for adr in adrs_to_add:
+        repo_root = Path(adr.repository_path).resolve()
+        for service in services_to_add:
+            service_path = Path(service.repository_path).resolve()
+            if service_path == repo_root or repo_root in service_path.parents:
+                association = AdrServiceAssociation()
+                association.adr = adr
+                association.service = service
+                associations_to_add.append(association)
+    return associations_to_add
+
+
 def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     """Scan `roots` for manifests, docker-compose.yml files, and
     docs/adr/*.md files, replacing the registry's, external nodes',
@@ -70,52 +215,9 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
             )
             continue
 
-        for manifest_path, ecosystem in find_manifests(root_path):
-            repository_path = str(manifest_path.parent)
-            try:
-                parsed = _PARSERS[ecosystem](manifest_path)
-            except ManifestParseError as exc:
-                # FR-007/FR-008: isolate this failure, keep scanning the rest.
-                issues_to_add.append(
-                    ScanIssue(
-                        manifest_path=str(manifest_path),
-                        repository_path=repository_path,
-                        issue_type="unparsable",
-                        reason=exc.reason,
-                        detected_at=now,
-                    )
-                )
-                continue
-
-            resolved_name = name_resolution.resolve_name(parsed.name, manifest_path, existing_names)
-            existing_names.add(resolved_name)
-
-            service = Service(
-                name=resolved_name,
-                ecosystem=ecosystem,
-                repository_path=repository_path,
-                manifest_path=str(manifest_path),
-                is_complete=parsed.is_complete,
-                last_scanned_at=now,
-            )
-            service.dependencies = [
-                Dependency(name=dep.name, declared_version=dep.declared_version)
-                for dep in parsed.dependencies
-            ]
-            services_to_add.append(service)
-
-            if not parsed.is_complete:
-                # FR-009: still registered, but flagged and explained.
-                issues_to_add.append(
-                    ScanIssue(
-                        manifest_path=str(manifest_path),
-                        repository_path=repository_path,
-                        issue_type="incomplete_data",
-                        reason=parsed.incomplete_reason or "Manifest is missing required data",
-                        service=service,
-                        detected_at=now,
-                    )
-                )
+        root_services, root_issues = _scan_manifests(root_path, existing_names, now)
+        services_to_add.extend(root_services)
+        issues_to_add.extend(root_issues)
 
         compose_files.extend(find_docker_compose_files(root_path))
         adr_files.extend(find_adr_files(root_path))
@@ -127,80 +229,14 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     services_by_build_context = {
         Path(service.repository_path).resolve(): service for service in services_to_add
     }
+    external_nodes_to_add, connections_to_add, compose_issues = _scan_compose(
+        compose_files, services_by_build_context, now
+    )
+    issues_to_add.extend(compose_issues)
 
-    external_nodes_to_add: list[ExternalNode] = []
-    connections_to_add: list[ServiceConnection] = []
-
-    for compose_path in compose_files:
-        repository_path = str(compose_path.parent)
-        try:
-            parsed_compose = docker_compose.parse(compose_path)
-        except ManifestParseError as exc:
-            # 002 FR-013: isolate this failure the same way manifest failures are.
-            issues_to_add.append(
-                ScanIssue(
-                    manifest_path=str(compose_path),
-                    repository_path=repository_path,
-                    issue_type="unparsable",
-                    reason=exc.reason,
-                    detected_at=now,
-                )
-            )
-            continue
-
-        result = build_graph_for_compose(
-            parsed_compose, compose_path, repository_path, services_by_build_context
-        )
-        external_nodes_to_add.extend(result.external_nodes)
-        connections_to_add.extend(result.connections)
-
-    # 004 FR-002/FR-008: every docs/adr/*.md is one ADR; a parse failure
-    # (no title) is isolated as its own AdrImportIssue, never a ScanIssue --
-    # kept in a dedicated table so this scan and the registry scan can
-    # never clobber each other's issue history (004 ADR 0007-in-spirit).
-    adrs_to_add: list[AdrRecord] = []
-    adr_issues_to_add: list[AdrImportIssue] = []
-
-    for adr_path in adr_files:
-        # repository root = grandparent of docs/adr (research.md §7).
-        repository_path = str(adr_path.parent.parent.parent)
-        try:
-            fields = adr_markdown.parse(adr_path)
-        except ManifestParseError as exc:
-            adr_issues_to_add.append(
-                AdrImportIssue(path=str(adr_path), reason=exc.reason, detected_at=now)
-            )
-            continue
-
-        adrs_to_add.append(
-            AdrRecord(
-                title=fields.title,
-                raw_status=fields.raw_status,
-                normalized_status=fields.normalized_status,
-                date=fields.date,
-                source_path=str(adr_path),
-                repository_path=repository_path,
-                content=fields.content,
-                has_secret_warning=check_for_secrets(fields.content),
-            )
-        )
-
-    # 004 FR-005/FR-006: relationships are resolved across all ADRs found in
-    # this scan (research.md §5-6), and each ADR is associated with every
-    # service registered under its own repository root (research.md §7) --
-    # both derived only from in-memory objects, since none of this has an id
-    # yet before the transaction below commits.
+    adrs_to_add, adr_issues_to_add = _scan_adrs(adr_files, now)
     relationships_to_add = resolve_relationships(adrs_to_add)
-    associations_to_add: list[AdrServiceAssociation] = []
-    for adr in adrs_to_add:
-        repo_root = Path(adr.repository_path).resolve()
-        for service in services_to_add:
-            service_path = Path(service.repository_path).resolve()
-            if service_path == repo_root or repo_root in service_path.parents:
-                association = AdrServiceAssociation()
-                association.adr = adr
-                association.service = service
-                associations_to_add.append(association)
+    associations_to_add = _resolve_adr_associations(adrs_to_add, services_to_add)
 
     # Replace all prior scan results in one transaction. Children first, since
     # SQLite enforces FK constraints and bulk deletes bypass ORM cascades.

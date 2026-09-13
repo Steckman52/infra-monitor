@@ -57,11 +57,15 @@ def parse(path: Path) -> ParsedCompose:
         raise ManifestParseError("docker-compose.yml does not contain a mapping")
 
     services_raw = data.get("services") or {}
+    if not isinstance(services_raw, dict):
+        raise ManifestParseError("docker-compose.yml's 'services' is not a mapping")
     compose_dir = path.parent
 
     services = []
     for name, block in services_raw.items():
         block = block or {}
+        if not isinstance(block, dict):
+            raise ManifestParseError(f"docker-compose.yml service '{name}' is not a mapping")
         services.append(
             ComposeServiceBlock(
                 name=str(name),

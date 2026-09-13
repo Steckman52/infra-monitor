@@ -44,7 +44,12 @@ function LogsPage({ onBack, onSelectGroup, onSelectService, onViewLogScanIssues 
         View log scan issues
       </button>
       <LogScanButton onScanComplete={handleScanComplete} />
-      {lastScanSummary && (
+      {lastScanSummary && lastScanSummary.root_unreachable && (
+        <p className="scan-error" role="alert">
+          Log root path does not exist or is not a directory.
+        </p>
+      )}
+      {lastScanSummary && !lastScanSummary.root_unreachable && (
         <p className="scan-summary">
           Found {lastScanSummary.error_groups_found} error group(s),{' '}
           {lastScanSummary.issues_found} issue(s).
