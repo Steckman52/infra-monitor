@@ -47,3 +47,41 @@ the same `POST /api/scan` / scan button already used for the registry.
   import-only per FR-013).
 - Non-MADR-shaped ADR templates from third-party conventions (feature
   recognizes this project's own MADR shape, per spec Assumptions).
+
+## Validation record
+
+Last run 2026-09-13: step 1 verified in-browser by scanning this
+project's own repository root — all 9 real ADRs (0001-0009, including
+the two authored for this feature's own Polish phase) appeared with
+correct title/status/date, alongside the fixture and test-fixture ADRs
+picked up from the same root (14 total, no path collisions since every
+fixture file's path is genuinely distinct). Step 2 verified against that
+same live scan via `GET /api/adrs/{id}`: "Third Decision" shows
+`supersedes: [Second Decision]` and both `adr-service-a`/`adr-service-b`
+as related services. Step 3 verified in-browser: the ADR Issues view
+showed `broken.md` as a parse failure and `secret-leak.md` as a secret
+warning (AWS-key-specific reason), while `secret-leak.md` still appeared
+normally in the plain ADR list. Step 4 (re-scan reflects an added/removed
+ADR) was not manually re-run in-browser this session — it's covered by
+the automated `test_rescan_reflects_added_and_removed_adr` and
+`test_rescan_drops_relationship_after_target_deleted` integration tests.
+FR-013 (no create/edit/delete affordance) confirmed by inspection: only
+`GET` routes exist under `/api/adrs*`, and no frontend ADR component
+renders a create/edit/delete control.
+
+One real, pre-existing gap was found while validating step 1: passing
+two **overlapping** scan roots (this project's own root, which already
+contains the fixture repository nested inside it, plus that same fixture
+path again explicitly) makes the same file get walked and parsed twice
+in one scan, and `AdrRecord.source_path`'s unique constraint turns that
+into an unhandled `IntegrityError` (500), correctly rolled back as one
+transaction but not reported as a graceful `ScanIssue`/`AdrImportIssue`.
+This is not specific to the ADR module — the same double-walk would
+silently duplicate `Service` rows for manifests too, just without a
+unique constraint to surface it. No spec (001-004) lists overlapping
+root paths as a requirement or edge case, so this was left unfixed here
+as out of scope for this feature's task list; flagged as a candidate
+follow-up rather than patched silently. All 127 backend tests pass,
+including the `test_scanning_a_few_hundred_adrs_completes_quickly`
+performance check (300 generated ADRs with chained relationships, well
+under the 5-second target).

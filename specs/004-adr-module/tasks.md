@@ -136,10 +136,10 @@ the ADR list too.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T035 [P] Author `docs/adr/0008-adr-scan-extends-registry-scan.md` and `docs/adr/0009-adr-relationships-persisted-at-scan-time.md` as plain MADR files per plan.md's Complexity Tracking (Constitution Principle VI) — these two ADRs will then be importable by this very feature once merged, on the next scan of this repository
-- [ ] T036 [P] Update `backend/README.md` and `frontend/README.md` to document the extended scan response, the three new endpoints, and the three new screens
-- [ ] T037 Add a performance sanity check in `backend/tests/integration/test_adr_scan_performance.py` asserting parsing and relationship resolution for a few hundred generated ADR files completes in well under 5 seconds (plan.md Performance Goals)
-- [ ] T038 Run quickstart.md validation end-to-end against this project's own real `docs/adr/` (dogfooding), confirm no manual create/edit/delete affordance for an ADR exists anywhere in the API or UI (FR-013), and record the result
+- [X] T035 [P] Author `docs/adr/0008-adr-scan-extends-registry-scan.md` and `docs/adr/0009-adr-relationships-persisted-at-scan-time.md` as plain MADR files per plan.md's Complexity Tracking (Constitution Principle VI) — these two ADRs will then be importable by this very feature once merged, on the next scan of this repository
+- [X] T036 [P] Update `backend/README.md` and `frontend/README.md` to document the extended scan response, the three new endpoints, and the three new screens
+- [X] T037 Add a performance sanity check in `backend/tests/integration/test_adr_scan_performance.py` asserting parsing and relationship resolution for a few hundred generated ADR files completes in well under 5 seconds (plan.md Performance Goals)
+- [X] T038 Run quickstart.md validation end-to-end against this project's own real `docs/adr/` (dogfooding), confirm no manual create/edit/delete affordance for an ADR exists anywhere in the API or UI (FR-013), and record the result
 
 ---
 

@@ -1,23 +1,26 @@
-# Frontend — Service Registry, Dependency Map & Log Analysis UI
+# Frontend — Service Registry, Dependency Map, Log Analysis & ADR UI
 
 React (Vite + TypeScript) single-page app for the infrastructure monitoring
 system: trigger scans, browse discovered services, review scan issues,
 check dependency version compatibility, view the docker-compose-derived
-connection graph, and scan/browse grouped log errors per service. Talks to
-the [backend](../backend/README.md) over `/api/*`.
+connection graph, scan/browse grouped log errors per service, and browse
+imported ADRs with their relationships, related services, and import
+issues. Talks to the [backend](../backend/README.md) over `/api/*`.
 
 ## Structure
 
 * `src/pages/` — `RegistryPage`, `ServiceDetailPage`, `ScanIssuesPage`,
   `CompatibilityPage`, `ConnectionsPage`, `LogsPage`,
-  `ErrorGroupDetailPage`, `LogScanIssuesPage`, one per screen. `App.tsx`
-  switches between them with simple local state (no router — eight screens
-  still don't justify the dependency).
+  `ErrorGroupDetailPage`, `LogScanIssuesPage`, `AdrsPage`,
+  `AdrDetailPage`, `AdrIssuesPage`, one per screen. `App.tsx` switches
+  between them with simple local state (no router — eleven screens still
+  don't justify the dependency).
 * `src/components/` — `ScanButton`, `ServiceTable`, `ServiceDetail`,
   `ScanIssuesList`, `CompatibilityTable`, `ConnectionGraphView`,
   `LogScanButton`, `ErrorGroupsTable`, `ErrorGroupDetail`,
-  `LogScanIssuesList`. `ServiceDetail` also renders that service's own
-  compatibility risks and connections.
+  `LogScanIssuesList`, `AdrTable`, `AdrDetail`, `AdrIssuesList`.
+  `ServiceDetail` also renders that service's own compatibility risks and
+  connections.
 * `src/services/api.ts` — typed `fetch` wrappers for every backend endpoint.
 
 ## Running locally
