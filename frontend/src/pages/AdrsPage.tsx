@@ -4,9 +4,10 @@ import { listAdrs, type AdrSummary } from '../services/api';
 
 interface AdrsPageProps {
   onBack: () => void;
+  onSelectAdr: (id: number) => void;
 }
 
-function AdrsPage({ onBack }: AdrsPageProps) {
+function AdrsPage({ onBack, onSelectAdr }: AdrsPageProps) {
   const [adrs, setAdrs] = useState<AdrSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +38,7 @@ function AdrsPage({ onBack }: AdrsPageProps) {
           {error}
         </p>
       )}
-      <AdrTable adrs={adrs} />
+      <AdrTable adrs={adrs} onSelectAdr={onSelectAdr} />
     </div>
   );
 }

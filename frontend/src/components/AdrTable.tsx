@@ -2,9 +2,10 @@ import type { AdrSummary } from '../services/api';
 
 interface AdrTableProps {
   adrs: AdrSummary[];
+  onSelectAdr: (id: number) => void;
 }
 
-function AdrTable({ adrs }: AdrTableProps) {
+function AdrTable({ adrs, onSelectAdr }: AdrTableProps) {
   if (adrs.length === 0) {
     return <p>No ADRs found. Scan a repository containing a docs/adr directory.</p>;
   }
@@ -21,7 +22,7 @@ function AdrTable({ adrs }: AdrTableProps) {
       </thead>
       <tbody>
         {adrs.map((adr) => (
-          <tr key={adr.id}>
+          <tr key={adr.id} onClick={() => onSelectAdr(adr.id)} style={{ cursor: 'pointer' }}>
             <td>
               {adr.title}
               {adr.has_secret_warning && <span title="Possible secret detected"> ⚠️</span>}

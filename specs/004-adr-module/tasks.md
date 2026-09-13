@@ -91,18 +91,18 @@ related.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T020 [P] [US2] Unit test for relationship detection in `backend/tests/unit/test_adr_relationships.py` per research.md §5-6: the whole-file regex matches all four keyword phrases with an accompanying link; "A superseded by B" and "B supersedes A" normalize to the same canonical `(from=B, to=A, type=supersedes)` tuple and deduplicate to one; a link to a file not present in the scan produces no relationship
-- [ ] T021 [P] [US2] Contract test for `GET /api/adrs/{id}` in `backend/tests/contract/test_adr_detail_endpoint.py` per contracts/api.md, including the `404` case
-- [ ] T022 [US2] Integration test in `backend/tests/integration/test_adr_relationships.py`: scan the T001 fixture repository, assert exactly one `AdrRelationship` row exists between 0002 and 0003 (Edge Case: dedup despite both-sided mention), and that both `service-a` and `service-b` are associated with all 4 imported ADRs (SC-005); then, in a mutable copy, delete `0003-third-decision.md` and re-scan, asserting 0002 no longer shows a relationship to it (Edge Case: dangling reference after re-scan)
+- [X] T020 [P] [US2] Unit test for relationship detection in `backend/tests/unit/test_adr_relationships.py` per research.md §5-6: the whole-file regex matches all four keyword phrases with an accompanying link; "A superseded by B" and "B supersedes A" normalize to the same canonical `(from=B, to=A, type=supersedes)` tuple and deduplicate to one; a link to a file not present in the scan produces no relationship
+- [X] T021 [P] [US2] Contract test for `GET /api/adrs/{id}` in `backend/tests/contract/test_adr_detail_endpoint.py` per contracts/api.md, including the `404` case
+- [X] T022 [US2] Integration test in `backend/tests/integration/test_adr_relationships.py`: scan the T001 fixture repository, assert exactly one `AdrRelationship` row exists between 0002 and 0003 (Edge Case: dedup despite both-sided mention), and that both `service-a` and `service-b` are associated with all 4 imported ADRs (SC-005); then, in a mutable copy, delete `0003-third-decision.md` and re-scan, asserting 0002 no longer shows a relationship to it (Edge Case: dangling reference after re-scan)
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Implement `backend/src/scanning/adr_relationships.py`: `resolve_relationships(adr_records)` applying the research.md §5 regex across each record's content, resolving link targets by path (research.md §6) against the other records from the same scan, and deduplicating by canonical `(from_adr_id, to_adr_id, relationship_type)`
-- [ ] T024 [US2] Extend `run_scan` in `backend/src/scanning/scan_service.py` to call `resolve_relationships` (T023) after all `AdrRecord` rows exist, and to compute `AdrServiceAssociation` rows by matching each ADR's `repository_path` against registered services' `repository_path` (equal or nested, research.md §7) (depends on T003, T004, T023)
-- [ ] T025 [US2] Implement `GET /api/adrs/{id}` in `backend/src/api/adrs.py` per contracts/api.md: `content`, `supersedes`/`superseded_by`/`amends`/`amended_by` (queried from both sides of `AdrRelationship`), and `related_services`, `404` when not found (depends on T016, T024)
-- [ ] T026 [P] [US2] Implement frontend API client function `getAdrDetail(id)` in `frontend/src/services/api.ts`
-- [ ] T027 [P] [US2] Implement `AdrDetail` component in `frontend/src/components/AdrDetail.tsx`
-- [ ] T028 [US2] Implement `AdrDetailPage` in `frontend/src/pages/AdrDetailPage.tsx`, linked from `AdrTable` rows (depends on T018, T026, T027)
+- [X] T023 [US2] Implement `backend/src/scanning/adr_relationships.py`: `resolve_relationships(adr_records)` applying the research.md §5 regex across each record's content, resolving link targets by path (research.md §6) against the other records from the same scan, and deduplicating by canonical `(from_adr_id, to_adr_id, relationship_type)`
+- [X] T024 [US2] Extend `run_scan` in `backend/src/scanning/scan_service.py` to call `resolve_relationships` (T023) after all `AdrRecord` rows exist, and to compute `AdrServiceAssociation` rows by matching each ADR's `repository_path` against registered services' `repository_path` (equal or nested, research.md §7) (depends on T003, T004, T023)
+- [X] T025 [US2] Implement `GET /api/adrs/{id}` in `backend/src/api/adrs.py` per contracts/api.md: `content`, `supersedes`/`superseded_by`/`amends`/`amended_by` (queried from both sides of `AdrRelationship`), and `related_services`, `404` when not found (depends on T016, T024)
+- [X] T026 [P] [US2] Implement frontend API client function `getAdrDetail(id)` in `frontend/src/services/api.ts`
+- [X] T027 [P] [US2] Implement `AdrDetail` component in `frontend/src/components/AdrDetail.tsx`
+- [X] T028 [US2] Implement `AdrDetailPage` in `frontend/src/pages/AdrDetailPage.tsx`, linked from `AdrTable` rows (depends on T018, T026, T027)
 
 **Checkpoint**: User Stories 1 AND 2 both work independently.
 

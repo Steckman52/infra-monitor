@@ -6,12 +6,15 @@ from sqlalchemy.orm import Session
 
 from src.models.adr_import_issue import AdrImportIssue
 from src.models.adr_record import AdrRecord
+from src.models.adr_relationship import AdrRelationship
+from src.models.adr_service_association import AdrServiceAssociation
 from src.models.dependency import Dependency
 from src.models.external_node import ExternalNode
 from src.models.scan_issue import ScanIssue
 from src.models.service import Service
 from src.models.service_connection import ServiceConnection
 from src.scanning import name_resolution
+from src.scanning.adr_relationships import resolve_relationships
 from src.scanning.adr_secrets import check_for_secrets
 from src.scanning.connection_graph import build_graph_for_compose
 from src.scanning.parsed_manifest import ManifestParseError
@@ -181,6 +184,23 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
             )
         )
 
+    # 004 FR-005/FR-006: relationships are resolved across all ADRs found in
+    # this scan (research.md §5-6), and each ADR is associated with every
+    # service registered under its own repository root (research.md §7) --
+    # both derived only from in-memory objects, since none of this has an id
+    # yet before the transaction below commits.
+    relationships_to_add = resolve_relationships(adrs_to_add)
+    associations_to_add: list[AdrServiceAssociation] = []
+    for adr in adrs_to_add:
+        repo_root = Path(adr.repository_path).resolve()
+        for service in services_to_add:
+            service_path = Path(service.repository_path).resolve()
+            if service_path == repo_root or repo_root in service_path.parents:
+                association = AdrServiceAssociation()
+                association.adr = adr
+                association.service = service
+                associations_to_add.append(association)
+
     # Replace all prior scan results in one transaction. Children first, since
     # SQLite enforces FK constraints and bulk deletes bypass ORM cascades.
     session.query(ServiceConnection).delete()
@@ -189,6 +209,8 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     session.query(ExternalNode).delete()
     session.query(Service).delete()
     session.query(AdrImportIssue).delete()
+    session.query(AdrRelationship).delete()
+    session.query(AdrServiceAssociation).delete()
     session.query(AdrRecord).delete()
     session.add_all(services_to_add)
     session.add_all(issues_to_add)
@@ -196,6 +218,8 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     session.add_all(connections_to_add)
     session.add_all(adrs_to_add)
     session.add_all(adr_issues_to_add)
+    session.add_all(relationships_to_add)
+    session.add_all(associations_to_add)
     session.commit()
 
     return ScanSummary(

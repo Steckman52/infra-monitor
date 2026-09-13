@@ -23,6 +23,25 @@ export interface AdrSummary {
   has_secret_warning: boolean;
 }
 
+export interface RelatedAdr {
+  adr_id: number;
+  title: string;
+}
+
+export interface RelatedService {
+  service_id: number;
+  service_name: string;
+}
+
+export interface AdrDetail extends AdrSummary {
+  content: string;
+  supersedes: RelatedAdr[];
+  superseded_by: RelatedAdr[];
+  amends: RelatedAdr[];
+  amended_by: RelatedAdr[];
+  related_services: RelatedService[];
+}
+
 export interface Dependency {
   name: string;
   declared_version: string | null;
@@ -195,4 +214,9 @@ export async function listLogScanIssues(): Promise<LogScanIssue[]> {
 export async function listAdrs(): Promise<AdrSummary[]> {
   const response = await fetch('/api/adrs');
   return parseJsonOrThrow<AdrSummary[]>(response);
+}
+
+export async function getAdrDetail(id: number): Promise<AdrDetail> {
+  const response = await fetch(`/api/adrs/${id}`);
+  return parseJsonOrThrow<AdrDetail>(response);
 }
