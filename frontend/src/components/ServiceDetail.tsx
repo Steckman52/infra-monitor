@@ -2,9 +2,11 @@ import type { ServiceDetail as ServiceDetailData } from '../services/api';
 
 interface ServiceDetailProps {
   service: ServiceDetailData;
+  onSelectAdr: (id: number) => void;
+  onSelectErrorGroup: (id: number) => void;
 }
 
-function ServiceDetail({ service }: ServiceDetailProps) {
+function ServiceDetail({ service, onSelectAdr, onSelectErrorGroup }: ServiceDetailProps) {
   return (
     <div className="service-detail">
       <h2>{service.name}</h2>
@@ -67,6 +69,41 @@ function ServiceDetail({ service }: ServiceDetailProps) {
               {edge.node.name}
               {edge.node.type === 'external' && ' (external)'} —{' '}
               {edge.relationship_basis.replace('_', ' ')}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h3>Related ADRs</h3>
+      {service.related_adrs.length === 0 ? (
+        <p>No ADRs reference this service's repository.</p>
+      ) : (
+        <ul className="related-adrs">
+          {service.related_adrs.map((adr) => (
+            <li key={adr.adr_id}>
+              <button type="button" className="adr-link" onClick={() => onSelectAdr(adr.adr_id)}>
+                {adr.title}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h3>Recent Error Groups</h3>
+      {service.recent_error_groups.length === 0 ? (
+        <p>No log errors attributed to this service.</p>
+      ) : (
+        <ul className="recent-error-groups">
+          {service.recent_error_groups.map((group) => (
+            <li key={group.id}>
+              <button
+                type="button"
+                className="error-group-link"
+                onClick={() => onSelectErrorGroup(group.id)}
+              >
+                {group.severity_marker}: {group.normalized_template}
+              </button>{' '}
+              ({group.occurrence_count} occurrence{group.occurrence_count === 1 ? '' : 's'})
             </li>
           ))}
         </ul>

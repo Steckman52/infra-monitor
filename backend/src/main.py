@@ -7,6 +7,7 @@ from src.api import (
     adrs,
     compatibility,
     connections,
+    dashboard,
     error_groups,
     log_scan,
     log_scan_issues,
@@ -34,3 +35,4 @@ app.include_router(error_groups.router)
 app.include_router(log_scan_issues.router)
 app.include_router(adrs.router)
 app.include_router(adr_issues.router)
+app.include_router(dashboard.router)

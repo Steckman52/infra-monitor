@@ -4,6 +4,7 @@ import AdrIssuesPage from './pages/AdrIssuesPage'
 import AdrsPage from './pages/AdrsPage'
 import CompatibilityPage from './pages/CompatibilityPage'
 import ConnectionsPage from './pages/ConnectionsPage'
+import DashboardPage from './pages/DashboardPage'
 import ErrorGroupDetailPage from './pages/ErrorGroupDetailPage'
 import LogScanIssuesPage from './pages/LogScanIssuesPage'
 import LogsPage from './pages/LogsPage'
@@ -12,6 +13,7 @@ import ScanIssuesPage from './pages/ScanIssuesPage'
 import ServiceDetailPage from './pages/ServiceDetailPage'
 
 type View =
+  | { name: 'dashboard' }
   | { name: 'registry' }
   | { name: 'service-detail'; serviceId: number }
   | { name: 'scan-issues' }
@@ -25,13 +27,29 @@ type View =
   | { name: 'adr-issues' }
 
 function App() {
-  const [view, setView] = useState<View>({ name: 'registry' })
+  const [view, setView] = useState<View>({ name: 'dashboard' })
+
+  if (view.name === 'dashboard') {
+    return (
+      <DashboardPage
+        onViewRegistry={() => setView({ name: 'registry' })}
+        onViewScanIssues={() => setView({ name: 'scan-issues' })}
+        onViewCompatibility={() => setView({ name: 'compatibility' })}
+        onViewLogs={() => setView({ name: 'logs' })}
+        onViewLogScanIssues={() => setView({ name: 'log-scan-issues' })}
+        onViewAdrs={() => setView({ name: 'adrs' })}
+        onViewAdrIssues={() => setView({ name: 'adr-issues' })}
+      />
+    )
+  }
 
   if (view.name === 'service-detail') {
     return (
       <ServiceDetailPage
         serviceId={view.serviceId}
         onBack={() => setView({ name: 'registry' })}
+        onSelectAdr={(adrId) => setView({ name: 'adr-detail', adrId })}
+        onSelectErrorGroup={(groupId) => setView({ name: 'error-group-detail', groupId })}
       />
     )
   }
@@ -84,6 +102,7 @@ function App() {
       <LogsPage
         onBack={() => setView({ name: 'registry' })}
         onSelectGroup={(groupId) => setView({ name: 'error-group-detail', groupId })}
+        onSelectService={(serviceId) => setView({ name: 'service-detail', serviceId })}
         onViewLogScanIssues={() => setView({ name: 'log-scan-issues' })}
       />
     )
@@ -91,6 +110,7 @@ function App() {
 
   return (
     <RegistryPage
+      onViewDashboard={() => setView({ name: 'dashboard' })}
       onSelectService={(serviceId) => setView({ name: 'service-detail', serviceId })}
       onViewScanIssues={() => setView({ name: 'scan-issues' })}
       onViewCompatibility={() => setView({ name: 'compatibility' })}

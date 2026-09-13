@@ -5,9 +5,11 @@ import { getServiceDetail, type ServiceDetail as ServiceDetailData } from '../se
 interface ServiceDetailPageProps {
   serviceId: number;
   onBack: () => void;
+  onSelectAdr: (id: number) => void;
+  onSelectErrorGroup: (id: number) => void;
 }
 
-function ServiceDetailPage({ serviceId, onBack }: ServiceDetailPageProps) {
+function ServiceDetailPage({ serviceId, onBack, onSelectAdr, onSelectErrorGroup }: ServiceDetailPageProps) {
   const [service, setService] = useState<ServiceDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +40,13 @@ function ServiceDetailPage({ serviceId, onBack }: ServiceDetailPageProps) {
         </p>
       )}
       {!error && !service && <p>Loading…</p>}
-      {service && <ServiceDetail service={service} />}
+      {service && (
+        <ServiceDetail
+          service={service}
+          onSelectAdr={onSelectAdr}
+          onSelectErrorGroup={onSelectErrorGroup}
+        />
+      )}
     </div>
   );
 }

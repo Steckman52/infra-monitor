@@ -4,6 +4,7 @@ import ServiceTable from '../components/ServiceTable';
 import { listServices, type ScanResponse, type ServiceSummary } from '../services/api';
 
 interface RegistryPageProps {
+  onViewDashboard: () => void;
   onSelectService: (id: number) => void;
   onViewScanIssues: () => void;
   onViewCompatibility: () => void;
@@ -13,6 +14,7 @@ interface RegistryPageProps {
 }
 
 function RegistryPage({
+  onViewDashboard,
   onSelectService,
   onViewScanIssues,
   onViewCompatibility,
@@ -23,6 +25,7 @@ function RegistryPage({
   const [services, setServices] = useState<ServiceSummary[]>([]);
   const [lastScanSummary, setLastScanSummary] = useState<ScanResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [filterQuery, setFilterQuery] = useState('');
 
   const refreshServices = useCallback(async () => {
     try {
@@ -43,8 +46,20 @@ function RegistryPage({
     await refreshServices();
   };
 
+  const normalizedQuery = filterQuery.trim().toLowerCase();
+  const filteredServices = normalizedQuery
+    ? services.filter(
+        (service) =>
+          service.name.toLowerCase().includes(normalizedQuery) ||
+          service.ecosystem.toLowerCase().includes(normalizedQuery),
+      )
+    : services;
+
   return (
     <div className="registry-page">
+      <button type="button" onClick={onViewDashboard}>
+        ← Dashboard
+      </button>
       <h1>Service Registry</h1>
       <button type="button" onClick={onViewScanIssues}>
         View scan issues
@@ -76,7 +91,14 @@ function RegistryPage({
           {loadError}
         </p>
       )}
-      <ServiceTable services={services} onSelectService={onSelectService} />
+      <input
+        type="text"
+        className="service-filter"
+        placeholder="Filter by name or ecosystem"
+        value={filterQuery}
+        onChange={(event) => setFilterQuery(event.target.value)}
+      />
+      <ServiceTable services={filteredServices} onSelectService={onSelectService} />
     </div>
   );
 }

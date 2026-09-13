@@ -73,6 +73,8 @@ export interface ServiceDetail extends ServiceSummary {
   dependencies: Dependency[];
   compatibility_risks: CompatibilityRisk[];
   connections: ConnectionEdge[];
+  related_adrs: RelatedAdr[];
+  recent_error_groups: ErrorGroupSummary[];
 }
 
 export interface ScanIssue {
@@ -153,6 +155,18 @@ export interface ErrorGroupDetail extends ErrorGroupSummary {
   occurrences: ErrorOccurrence[];
 }
 
+export interface DashboardSummary {
+  services_count: number;
+  scan_issues_count: number;
+  compatibility_risks_count: number;
+  error_groups_count: number;
+  log_scan_issues_count: number;
+  adrs_count: number;
+  adr_issues_count: number;
+  last_registry_scan_at: string | null;
+  last_log_scan_at: string | null;
+}
+
 async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -231,4 +245,9 @@ export async function getAdrDetail(id: number): Promise<AdrDetail> {
 export async function listAdrIssues(): Promise<AdrIssue[]> {
   const response = await fetch('/api/adr-issues');
   return parseJsonOrThrow<AdrIssue[]>(response);
+}
+
+export async function getDashboard(): Promise<DashboardSummary> {
+  const response = await fetch('/api/dashboard');
+  return parseJsonOrThrow<DashboardSummary>(response);
 }

@@ -11,6 +11,7 @@ from src.models.adr_service_association import AdrServiceAssociation
 from src.models.dependency import Dependency
 from src.models.external_node import ExternalNode
 from src.models.scan_issue import ScanIssue
+from src.models.scan_metadata import record_scan
 from src.models.service import Service
 from src.models.service_connection import ServiceConnection
 from src.scanning import name_resolution
@@ -220,6 +221,7 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     session.add_all(adr_issues_to_add)
     session.add_all(relationships_to_add)
     session.add_all(associations_to_add)
+    record_scan(session, "registry", now)
     session.commit()
 
     return ScanSummary(

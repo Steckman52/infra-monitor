@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from src.models.error_group import ErrorGroup
 from src.models.error_occurrence import ErrorOccurrence
 from src.models.log_scan_issue import LogScanIssue
+from src.models.scan_metadata import record_scan
 from src.models.service import Service
 from src.scanning.error_detection import detect_errors, extract_timestamp
 from src.scanning.normalization import normalize_template
@@ -127,6 +128,7 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
     session.query(ErrorGroup).delete()
     session.add_all(error_groups_to_add)
     session.add_all(issues_to_add)
+    record_scan(session, "log", now)
     session.commit()
 
     return LogScanSummary(

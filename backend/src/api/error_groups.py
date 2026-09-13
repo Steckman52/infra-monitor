@@ -38,7 +38,7 @@ class ErrorGroupDetail(ErrorGroupSummary):
     occurrences: list[ErrorOccurrenceOut]
 
 
-def _to_summary(group: ErrorGroup) -> ErrorGroupSummary:
+def to_summary(group: ErrorGroup) -> ErrorGroupSummary:
     return ErrorGroupSummary(
         id=group.id,
         service_id=group.service_id,
@@ -55,7 +55,7 @@ def _to_summary(group: ErrorGroup) -> ErrorGroupSummary:
 @router.get("/error-groups", response_model=list[ErrorGroupSummary])
 def list_error_groups(session: Session = Depends(get_session)) -> list[ErrorGroupSummary]:
     groups = session.query(ErrorGroup).order_by(ErrorGroup.occurrence_count.desc()).all()
-    return [_to_summary(group) for group in groups]
+    return [to_summary(group) for group in groups]
 
 
 @router.get("/error-groups/{group_id}", response_model=ErrorGroupDetail)
@@ -64,7 +64,7 @@ def get_error_group_detail(group_id: int, session: Session = Depends(get_session
     if group is None:
         raise HTTPException(status_code=404, detail="Error group not found")
 
-    summary = _to_summary(group)
+    summary = to_summary(group)
     return ErrorGroupDetail(
         **summary.model_dump(),
         example_text=group.example_text,
