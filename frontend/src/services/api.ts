@@ -42,6 +42,13 @@ export interface AdrDetail extends AdrSummary {
   related_services: RelatedService[];
 }
 
+export interface AdrIssue {
+  type: 'parse_failure' | 'secret_warning';
+  path: string;
+  reason: string;
+  adr_id: number | null;
+}
+
 export interface Dependency {
   name: string;
   declared_version: string | null;
@@ -219,4 +226,9 @@ export async function listAdrs(): Promise<AdrSummary[]> {
 export async function getAdrDetail(id: number): Promise<AdrDetail> {
   const response = await fetch(`/api/adrs/${id}`);
   return parseJsonOrThrow<AdrDetail>(response);
+}
+
+export async function listAdrIssues(): Promise<AdrIssue[]> {
+  const response = await fetch('/api/adr-issues');
+  return parseJsonOrThrow<AdrIssue[]>(response);
 }

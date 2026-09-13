@@ -120,15 +120,15 @@ the ADR list too.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T029 [P] [US3] Contract test for `GET /api/adr-issues` in `backend/tests/contract/test_adr_issues_endpoint.py` per contracts/api.md
-- [ ] T030 [US3] Integration test in `backend/tests/integration/test_adr_issues.py`: assert `broken.md` appears as `parse_failure` with a specific reason and `secret-leak.md` appears as `secret_warning` referencing its ADR id (Acceptance Scenarios 1-2); then, in a mutable copy, add a title heading to `broken.md` and re-scan, asserting its `parse_failure` is gone and it now appears as a normal ADR (Acceptance Scenario 3, FR-012/SC-006)
+- [X] T029 [P] [US3] Contract test for `GET /api/adr-issues` in `backend/tests/contract/test_adr_issues_endpoint.py` per contracts/api.md
+- [X] T030 [US3] Integration test in `backend/tests/integration/test_adr_issues.py`: assert `broken.md` appears as `parse_failure` with a specific reason and `secret-leak.md` appears as `secret_warning` referencing its ADR id (Acceptance Scenarios 1-2); then, in a mutable copy, add a title heading to `broken.md` and re-scan, asserting its `parse_failure` is gone and it now appears as a normal ADR (Acceptance Scenario 3, FR-012/SC-006)
 
 ### Implementation for User Story 3
 
-- [ ] T031 [US3] Implement `GET /api/adr-issues` in `backend/src/api/adr_issues.py` per contracts/api.md, combining `AdrImportIssue` rows and `AdrRecord` rows where `has_secret_warning` is true, register its router (depends on T014)
-- [ ] T032 [P] [US3] Implement frontend API client function `listAdrIssues()` in `frontend/src/services/api.ts`
-- [ ] T033 [P] [US3] Implement `AdrIssuesList` component in `frontend/src/components/AdrIssuesList.tsx`
-- [ ] T034 [US3] Implement `AdrIssuesPage` in `frontend/src/pages/AdrIssuesPage.tsx` and add a navigation entry from `AdrsPage` (depends on T032, T033)
+- [X] T031 [US3] Implement `GET /api/adr-issues` in `backend/src/api/adr_issues.py` per contracts/api.md, combining `AdrImportIssue` rows and `AdrRecord` rows where `has_secret_warning` is true, register its router (depends on T014)
+- [X] T032 [P] [US3] Implement frontend API client function `listAdrIssues()` in `frontend/src/services/api.ts`
+- [X] T033 [P] [US3] Implement `AdrIssuesList` component in `frontend/src/components/AdrIssuesList.tsx`
+- [X] T034 [US3] Implement `AdrIssuesPage` in `frontend/src/pages/AdrIssuesPage.tsx` and add a navigation entry from `AdrsPage` (depends on T032, T033)
 
 **Checkpoint**: All three user stories are independently functional.
 

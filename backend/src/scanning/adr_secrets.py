@@ -15,3 +15,16 @@ def check_for_secrets(content: str) -> bool:
         or _AWS_ACCESS_KEY_RE.search(content)
         or _GENERIC_CREDENTIAL_RE.search(content)
     )
+
+
+def describe_secret_warning(content: str) -> str | None:
+    """Human-readable reason for the first research.md §8 pattern that
+    matches `content`, for the combined issues/warnings view (FR-011).
+    Returns None when none match."""
+    if _PRIVATE_KEY_RE.search(content):
+        return "Content resembles a private key"
+    if _AWS_ACCESS_KEY_RE.search(content):
+        return "Content resembles an AWS access key"
+    if _GENERIC_CREDENTIAL_RE.search(content):
+        return "Content resembles a generic credential assignment"
+    return None

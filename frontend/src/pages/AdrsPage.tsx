@@ -5,9 +5,10 @@ import { listAdrs, type AdrSummary } from '../services/api';
 interface AdrsPageProps {
   onBack: () => void;
   onSelectAdr: (id: number) => void;
+  onViewIssues: () => void;
 }
 
-function AdrsPage({ onBack, onSelectAdr }: AdrsPageProps) {
+function AdrsPage({ onBack, onSelectAdr, onViewIssues }: AdrsPageProps) {
   const [adrs, setAdrs] = useState<AdrSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +34,9 @@ function AdrsPage({ onBack, onSelectAdr }: AdrsPageProps) {
         ← Back to registry
       </button>
       <h1>Architectural Decision Records</h1>
+      <button type="button" onClick={onViewIssues}>
+        View ADR issues
+      </button>
       {error && (
         <p className="load-error" role="alert">
           {error}
