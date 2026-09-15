@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import Layout from './components/Layout'
+import type { NavKey } from './components/Sidebar'
+import { useLanguage } from './i18n/LanguageContext'
 import AdrDetailPage from './pages/AdrDetailPage'
 import AdrIssuesPage from './pages/AdrIssuesPage'
 import AdrsPage from './pages/AdrsPage'
@@ -26,98 +29,147 @@ type View =
   | { name: 'adr-detail'; adrId: number }
   | { name: 'adr-issues' }
 
+const NAV_BY_VIEW: Record<View['name'], NavKey> = {
+  dashboard: 'dashboard',
+  registry: 'registry',
+  'service-detail': 'registry',
+  'scan-issues': 'registry',
+  compatibility: 'compatibility',
+  connections: 'connections',
+  logs: 'logs',
+  'error-group-detail': 'logs',
+  'log-scan-issues': 'logs',
+  adrs: 'adrs',
+  'adr-detail': 'adrs',
+  'adr-issues': 'adrs',
+}
+
 function App() {
   const [view, setView] = useState<View>({ name: 'dashboard' })
+  const { t } = useLanguage()
+
+  const goTo = (target: NavKey) => {
+    setView({ name: target === 'registry' ? 'registry' : target } as View)
+  }
+
+  const layoutProps = { active: NAV_BY_VIEW[view.name], onNavigate: goTo }
 
   if (view.name === 'dashboard') {
     return (
-      <DashboardPage
-        onViewRegistry={() => setView({ name: 'registry' })}
-        onViewScanIssues={() => setView({ name: 'scan-issues' })}
-        onViewCompatibility={() => setView({ name: 'compatibility' })}
-        onViewLogs={() => setView({ name: 'logs' })}
-        onViewLogScanIssues={() => setView({ name: 'log-scan-issues' })}
-        onViewAdrs={() => setView({ name: 'adrs' })}
-        onViewAdrIssues={() => setView({ name: 'adr-issues' })}
-      />
+      <Layout title={t.dashboard.title} {...layoutProps}>
+        <DashboardPage
+          onViewRegistry={() => setView({ name: 'registry' })}
+          onViewScanIssues={() => setView({ name: 'scan-issues' })}
+          onViewCompatibility={() => setView({ name: 'compatibility' })}
+          onViewLogs={() => setView({ name: 'logs' })}
+          onViewLogScanIssues={() => setView({ name: 'log-scan-issues' })}
+          onViewAdrs={() => setView({ name: 'adrs' })}
+          onViewAdrIssues={() => setView({ name: 'adr-issues' })}
+          onSelectErrorGroup={(groupId) => setView({ name: 'error-group-detail', groupId })}
+        />
+      </Layout>
     )
   }
 
   if (view.name === 'service-detail') {
     return (
-      <ServiceDetailPage
-        serviceId={view.serviceId}
-        onBack={() => setView({ name: 'registry' })}
-        onSelectAdr={(adrId) => setView({ name: 'adr-detail', adrId })}
-        onSelectErrorGroup={(groupId) => setView({ name: 'error-group-detail', groupId })}
-      />
+      <Layout title={t.nav.services} {...layoutProps}>
+        <ServiceDetailPage
+          serviceId={view.serviceId}
+          onBack={() => setView({ name: 'registry' })}
+          onSelectAdr={(adrId) => setView({ name: 'adr-detail', adrId })}
+          onSelectErrorGroup={(groupId) => setView({ name: 'error-group-detail', groupId })}
+        />
+      </Layout>
     )
   }
 
   if (view.name === 'scan-issues') {
-    return <ScanIssuesPage onBack={() => setView({ name: 'registry' })} />
+    return (
+      <Layout title={t.scanIssues.title} {...layoutProps}>
+        <ScanIssuesPage onBack={() => setView({ name: 'registry' })} />
+      </Layout>
+    )
   }
 
   if (view.name === 'compatibility') {
-    return <CompatibilityPage onBack={() => setView({ name: 'registry' })} />
+    return (
+      <Layout title={t.compatibility.title} {...layoutProps}>
+        <CompatibilityPage />
+      </Layout>
+    )
   }
 
   if (view.name === 'connections') {
-    return <ConnectionsPage onBack={() => setView({ name: 'registry' })} />
+    return (
+      <Layout title={t.connections.title} {...layoutProps}>
+        <ConnectionsPage />
+      </Layout>
+    )
   }
 
   if (view.name === 'error-group-detail') {
     return (
-      <ErrorGroupDetailPage
-        groupId={view.groupId}
-        onBack={() => setView({ name: 'logs' })}
-      />
+      <Layout title={t.nav.logs} {...layoutProps}>
+        <ErrorGroupDetailPage groupId={view.groupId} onBack={() => setView({ name: 'logs' })} />
+      </Layout>
     )
   }
 
   if (view.name === 'log-scan-issues') {
-    return <LogScanIssuesPage onBack={() => setView({ name: 'logs' })} />
+    return (
+      <Layout title={t.logScanIssues.title} {...layoutProps}>
+        <LogScanIssuesPage onBack={() => setView({ name: 'logs' })} />
+      </Layout>
+    )
   }
 
   if (view.name === 'adrs') {
     return (
-      <AdrsPage
-        onBack={() => setView({ name: 'registry' })}
-        onSelectAdr={(adrId) => setView({ name: 'adr-detail', adrId })}
-        onViewIssues={() => setView({ name: 'adr-issues' })}
-      />
+      <Layout title={t.adrs.title} {...layoutProps}>
+        <AdrsPage
+          onSelectAdr={(adrId) => setView({ name: 'adr-detail', adrId })}
+          onViewIssues={() => setView({ name: 'adr-issues' })}
+        />
+      </Layout>
     )
   }
 
   if (view.name === 'adr-detail') {
-    return <AdrDetailPage adrId={view.adrId} onBack={() => setView({ name: 'adrs' })} />
+    return (
+      <Layout title={t.nav.adrs} {...layoutProps}>
+        <AdrDetailPage adrId={view.adrId} onBack={() => setView({ name: 'adrs' })} />
+      </Layout>
+    )
   }
 
   if (view.name === 'adr-issues') {
-    return <AdrIssuesPage onBack={() => setView({ name: 'adrs' })} />
+    return (
+      <Layout title={t.adrIssues.title} {...layoutProps}>
+        <AdrIssuesPage onBack={() => setView({ name: 'adrs' })} />
+      </Layout>
+    )
   }
 
   if (view.name === 'logs') {
     return (
-      <LogsPage
-        onBack={() => setView({ name: 'registry' })}
-        onSelectGroup={(groupId) => setView({ name: 'error-group-detail', groupId })}
-        onSelectService={(serviceId) => setView({ name: 'service-detail', serviceId })}
-        onViewLogScanIssues={() => setView({ name: 'log-scan-issues' })}
-      />
+      <Layout title={t.logs.title} {...layoutProps}>
+        <LogsPage
+          onSelectGroup={(groupId) => setView({ name: 'error-group-detail', groupId })}
+          onSelectService={(serviceId) => setView({ name: 'service-detail', serviceId })}
+          onViewLogScanIssues={() => setView({ name: 'log-scan-issues' })}
+        />
+      </Layout>
     )
   }
 
   return (
-    <RegistryPage
-      onViewDashboard={() => setView({ name: 'dashboard' })}
-      onSelectService={(serviceId) => setView({ name: 'service-detail', serviceId })}
-      onViewScanIssues={() => setView({ name: 'scan-issues' })}
-      onViewCompatibility={() => setView({ name: 'compatibility' })}
-      onViewConnections={() => setView({ name: 'connections' })}
-      onViewLogs={() => setView({ name: 'logs' })}
-      onViewAdrs={() => setView({ name: 'adrs' })}
-    />
+    <Layout title={t.registry.title} {...layoutProps}>
+      <RegistryPage
+        onSelectService={(serviceId) => setView({ name: 'service-detail', serviceId })}
+        onViewScanIssues={() => setView({ name: 'scan-issues' })}
+      />
+    </Layout>
   )
 }
 

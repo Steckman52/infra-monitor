@@ -1,5 +1,8 @@
+import { TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import BackLink from '../components/BackLink';
 import LogScanIssuesList from '../components/LogScanIssuesList';
+import { useLanguage } from '../i18n/LanguageContext';
 import { listLogScanIssues, type LogScanIssue } from '../services/api';
 
 interface LogScanIssuesPageProps {
@@ -7,6 +10,7 @@ interface LogScanIssuesPageProps {
 }
 
 function LogScanIssuesPage({ onBack }: LogScanIssuesPageProps) {
+  const { t } = useLanguage();
   const [issues, setIssues] = useState<LogScanIssue[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,17 +31,16 @@ function LogScanIssuesPage({ onBack }: LogScanIssuesPageProps) {
   }, []);
 
   return (
-    <div className="log-scan-issues-page">
-      <button type="button" onClick={onBack}>
-        ← Back to log errors
-      </button>
-      <h1>Log Scan Issues</h1>
+    <div className="section">
+      <BackLink onClick={onBack} label={t.nav.logs} />
       {error && (
         <p className="load-error" role="alert">
-          {error}
+          <TriangleAlert /> {error}
         </p>
       )}
-      <LogScanIssuesList issues={issues} />
+      <div className="panel">
+        <LogScanIssuesList issues={issues} />
+      </div>
     </div>
   );
 }

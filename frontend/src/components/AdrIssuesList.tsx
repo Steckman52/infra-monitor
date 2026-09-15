@@ -1,33 +1,38 @@
+import { useLanguage } from '../i18n/LanguageContext';
 import type { AdrIssue } from '../services/api';
 
 interface AdrIssuesListProps {
   issues: AdrIssue[];
 }
 
-const ISSUE_TYPE_LABELS: Record<AdrIssue['type'], string> = {
-  parse_failure: 'Parse failure',
-  secret_warning: 'Possible secret',
-};
-
 function AdrIssuesList({ issues }: AdrIssuesListProps) {
+  const { t } = useLanguage();
+
+  const typeLabels: Record<AdrIssue['type'], string> = {
+    parse_failure: t.adrIssues.parseFailure,
+    secret_warning: t.adrIssues.secretWarning,
+  };
+
   if (issues.length === 0) {
-    return <p>No ADR issues. Every imported ADR parsed cleanly with no secret warnings.</p>;
+    return <p className="empty-state">{t.adrIssues.empty}</p>;
   }
 
   return (
-    <table className="adr-issues-table">
+    <table className="data-table">
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Path</th>
-          <th>Reason</th>
+          <th>{t.common.type}</th>
+          <th>{t.common.path}</th>
+          <th>{t.common.reason}</th>
         </tr>
       </thead>
       <tbody>
         {issues.map((issue, index) => (
           <tr key={index}>
-            <td>{ISSUE_TYPE_LABELS[issue.type]}</td>
-            <td>{issue.path}</td>
+            <td>
+              <span className="status-inline warn">{typeLabels[issue.type]}</span>
+            </td>
+            <td className="cell-mono">{issue.path}</td>
             <td>{issue.reason}</td>
           </tr>
         ))}

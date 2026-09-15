@@ -1,43 +1,43 @@
+import { Network } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import type { NodeConnections } from '../services/api';
 
 interface ConnectionGraphViewProps {
   nodes: NodeConnections[];
 }
 
-const BASIS_LABELS: Record<string, string> = {
-  shared_network: 'shared network',
-  depends_on: 'depends on',
-  both: 'shared network + depends on',
-};
-
 function ConnectionGraphView({ nodes }: ConnectionGraphViewProps) {
+  const { t } = useLanguage();
+
   if (nodes.length === 0) {
-    return (
-      <p>
-        No connections found yet. Scan repositories containing a
-        docker-compose.yml to populate this view.
-      </p>
-    );
+    return <p className="empty-state">{t.connections.empty}</p>;
   }
 
+  const basisLabel = (basis: string) =>
+    basis === 'shared_network' ? t.connections.sharedNetwork : basis === 'depends_on' ? t.connections.dependsOn : t.connections.both;
+
   return (
-    <ul className="connection-graph">
+    <>
       {nodes.map((entry) => (
-        <li key={`${entry.node.type}:${entry.node.id}`}>
-          <strong>{entry.node.name}</strong>{' '}
-          {entry.node.type === 'external' && '(external)'}
-          <ul>
+        <div key={`${entry.node.type}:${entry.node.id}`} className="activity-row" style={{ cursor: 'default' }}>
+          <div className="activity-icon">
+            <Network />
+          </div>
+          <div>
+            <div className="activity-title">
+              <b>{entry.node.name}</b>
+              {entry.node.type === 'external' && ` (${t.serviceDetail.external})`}
+            </div>
             {entry.connections.map((edge, index) => (
-              <li key={index}>
+              <div key={index} className="activity-meta">
                 → {edge.node.name}
-                {edge.node.type === 'external' && ' (external)'} —{' '}
-                {BASIS_LABELS[edge.relationship_basis] ?? edge.relationship_basis}
-              </li>
+                {edge.node.type === 'external' && ` (${t.serviceDetail.external})`} — {basisLabel(edge.relationship_basis)}
+              </div>
             ))}
-          </ul>
-        </li>
+          </div>
+        </div>
       ))}
-    </ul>
+    </>
   );
 }
 

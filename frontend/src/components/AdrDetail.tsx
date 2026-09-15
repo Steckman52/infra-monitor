@@ -1,3 +1,5 @@
+import { TriangleAlert } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import type { AdrDetail as AdrDetailData, RelatedAdr } from '../services/api';
 
 interface AdrDetailProps {
@@ -9,52 +11,58 @@ function RelatedAdrList({ label, items }: { label: string; items: RelatedAdr[] }
   return (
     <>
       <dt>{label}</dt>
-      <dd>
-        <ul>
-          {items.map((item) => (
-            <li key={item.adr_id}>{item.title}</li>
-          ))}
-        </ul>
-      </dd>
+      <dd>{items.map((item) => item.title).join(', ')}</dd>
     </>
   );
 }
 
 function AdrDetail({ adr }: AdrDetailProps) {
-  return (
-    <div className="adr-detail">
-      <h2>
-        {adr.title}
-        {adr.has_secret_warning && <span title="Possible secret detected"> ⚠️</span>}
-      </h2>
-      <dl>
-        <dt>Status</dt>
-        <dd>{adr.normalized_status}</dd>
-        <dt>Date</dt>
-        <dd>{adr.date ?? '—'}</dd>
-        <dt>Source</dt>
-        <dd>{adr.source_path}</dd>
-        <RelatedAdrList label="Supersedes" items={adr.supersedes} />
-        <RelatedAdrList label="Superseded by" items={adr.superseded_by} />
-        <RelatedAdrList label="Amends" items={adr.amends} />
-        <RelatedAdrList label="Amended by" items={adr.amended_by} />
-        {adr.related_services.length > 0 && (
-          <>
-            <dt>Related services</dt>
-            <dd>
-              <ul>
-                {adr.related_services.map((service) => (
-                  <li key={service.service_id}>{service.service_name}</li>
-                ))}
-              </ul>
-            </dd>
-          </>
-        )}
-      </dl>
+  const { t } = useLanguage();
 
-      <h3>Content</h3>
-      <pre className="adr-content">{adr.content}</pre>
-    </div>
+  return (
+    <>
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{adr.title}</span>
+          {adr.has_secret_warning && (
+            <span title={t.adrDetail.secretWarning} style={{ display: 'inline-flex' }}>
+              <TriangleAlert size={14} color="var(--warn)" />
+            </span>
+          )}
+        </div>
+        <div className="panel panel-body">
+          <dl className="detail-list">
+            <dt>{t.adrDetail.status}</dt>
+            <dd>{adr.normalized_status}</dd>
+            <dt>{t.adrDetail.date}</dt>
+            <dd className="cell-mono">{adr.date ?? '—'}</dd>
+            <dt>{t.adrDetail.source}</dt>
+            <dd className="cell-mono">{adr.source_path}</dd>
+            <RelatedAdrList label={t.adrDetail.supersedes} items={adr.supersedes} />
+            <RelatedAdrList label={t.adrDetail.supersededBy} items={adr.superseded_by} />
+            <RelatedAdrList label={t.adrDetail.amends} items={adr.amends} />
+            <RelatedAdrList label={t.adrDetail.amendedBy} items={adr.amended_by} />
+            {adr.related_services.length > 0 && (
+              <>
+                <dt>{t.adrDetail.relatedServices}</dt>
+                <dd>{adr.related_services.map((s) => s.service_name).join(', ')}</dd>
+              </>
+            )}
+          </dl>
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{t.adrDetail.content}</span>
+        </div>
+        <div className="panel panel-body">
+          <pre className="cell-mono" style={{ margin: 0, whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
+            {adr.content}
+          </pre>
+        </div>
+      </div>
+    </>
   );
 }
 

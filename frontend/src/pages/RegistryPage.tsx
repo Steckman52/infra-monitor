@@ -1,39 +1,30 @@
+import { FolderOpen, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import ScanButton from '../components/ScanButton';
-import ServiceTable from '../components/ServiceTable';
-import { listServices, type ScanResponse, type ServiceSummary } from '../services/api';
+import { useLanguage } from '../i18n/LanguageContext';
+import { listServices, pickDirectory, triggerScan, type ScanResponse, type ServiceSummary } from '../services/api';
 
 interface RegistryPageProps {
-  onViewDashboard: () => void;
   onSelectService: (id: number) => void;
   onViewScanIssues: () => void;
-  onViewCompatibility: () => void;
-  onViewConnections: () => void;
-  onViewLogs: () => void;
-  onViewAdrs: () => void;
 }
 
-function RegistryPage({
-  onViewDashboard,
-  onSelectService,
-  onViewScanIssues,
-  onViewCompatibility,
-  onViewConnections,
-  onViewLogs,
-  onViewAdrs,
-}: RegistryPageProps) {
+function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) {
+  const { t } = useLanguage();
   const [services, setServices] = useState<ServiceSummary[]>([]);
-  const [lastScanSummary, setLastScanSummary] = useState<ScanResponse | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [rootsInput, setRootsInput] = useState('');
   const [filterQuery, setFilterQuery] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const [isBrowsing, setIsBrowsing] = useState(false);
+  const [lastScanSummary, setLastScanSummary] = useState<ScanResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const refreshServices = useCallback(async () => {
     try {
       const data = await listServices();
       setServices(data);
-      setLoadError(null);
+      setError(null);
     } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load services.');
+      setError(err instanceof Error ? err.message : 'Failed to load services.');
     }
   }, []);
 
@@ -41,65 +32,139 @@ function RegistryPage({
     refreshServices();
   }, [refreshServices]);
 
-  const handleScanComplete = async (result: ScanResponse) => {
-    setLastScanSummary(result);
-    await refreshServices();
+  const handleScan = async () => {
+    const roots = rootsInput
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (roots.length === 0) return;
+
+    setIsScanning(true);
+    setError(null);
+    try {
+      const result = await triggerScan(roots);
+      setLastScanSummary(result);
+      await refreshServices();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Scan failed.');
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const handleBrowse = async () => {
+    setIsBrowsing(true);
+    try {
+      const { path } = await pickDirectory();
+      if (path) {
+        setRootsInput((current) => (current.trim() ? `${current.replace(/\n+$/, '')}\n${path}` : path));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to open folder picker.');
+    } finally {
+      setIsBrowsing(false);
+    }
   };
 
   const normalizedQuery = filterQuery.trim().toLowerCase();
   const filteredServices = normalizedQuery
     ? services.filter(
-        (service) =>
-          service.name.toLowerCase().includes(normalizedQuery) ||
-          service.ecosystem.toLowerCase().includes(normalizedQuery),
+        (s) => s.name.toLowerCase().includes(normalizedQuery) || s.ecosystem.toLowerCase().includes(normalizedQuery),
       )
     : services;
 
   return (
-    <div className="registry-page">
-      <button type="button" onClick={onViewDashboard}>
-        ← Dashboard
-      </button>
-      <h1>Service Registry</h1>
-      <button type="button" onClick={onViewScanIssues}>
-        View scan issues
-      </button>
-      <button type="button" onClick={onViewCompatibility}>
-        View dependency compatibility
-      </button>
-      <button type="button" onClick={onViewConnections}>
-        View connections
-      </button>
-      <button type="button" onClick={onViewLogs}>
-        View log errors
-      </button>
-      <button type="button" onClick={onViewAdrs}>
-        View ADRs
-      </button>
-      <ScanButton onScanComplete={handleScanComplete} />
-      {lastScanSummary && (
-        <p className="scan-summary">
-          Found {lastScanSummary.services_found} service(s), {lastScanSummary.issues_found}{' '}
-          issue(s), {lastScanSummary.adrs_found} ADR(s).
-          {lastScanSummary.unreachable_roots.length > 0 && (
-            <> Unreachable roots: {lastScanSummary.unreachable_roots.join(', ')}</>
-          )}
-        </p>
-      )}
-      {loadError && (
+    <>
+      {error && (
         <p className="load-error" role="alert">
-          {loadError}
+          <TriangleAlert /> {error}
         </p>
       )}
-      <input
-        type="text"
-        className="service-filter"
-        placeholder="Filter by name or ecosystem"
-        value={filterQuery}
-        onChange={(event) => setFilterQuery(event.target.value)}
-      />
-      <ServiceTable services={filteredServices} onSelectService={onSelectService} />
-    </div>
+
+      <div className="section">
+        <div className="panel">
+          <div className="panel-body" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <textarea
+              className="text-input"
+              style={{ flex: 1, minWidth: 260 }}
+              rows={2}
+              placeholder={t.registry.scanPlaceholder}
+              value={rootsInput}
+              onChange={(e) => setRootsInput(e.target.value)}
+            />
+            <button type="button" className="btn-secondary" onClick={handleBrowse} disabled={isBrowsing}>
+              <FolderOpen />
+              {t.common.browse}
+            </button>
+            <button type="button" className="btn-primary" onClick={handleScan} disabled={isScanning}>
+              <RefreshCw />
+              {t.common.scan}
+            </button>
+          </div>
+          {lastScanSummary && (
+            <div className="panel-body" style={{ paddingTop: 0 }}>
+              <p className="card-detail" style={{ margin: 0 }}>
+                {t.registry.scanSummary(lastScanSummary.services_found, lastScanSummary.issues_found, lastScanSummary.adrs_found)}
+                {lastScanSummary.unreachable_roots.length > 0 && (
+                  <>
+                    {' '}
+                    {t.registry.unreachableRoots} {lastScanSummary.unreachable_roots.join(', ')}
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-head">
+          <button type="button" className="link-button" onClick={onViewScanIssues}>
+            {t.registry.viewScanIssues}
+          </button>
+        </div>
+
+        <input
+          type="text"
+          className="text-input"
+          style={{ marginBottom: 12, width: '100%', maxWidth: 320 }}
+          placeholder={t.registry.filterPlaceholder}
+          value={filterQuery}
+          onChange={(e) => setFilterQuery(e.target.value)}
+        />
+
+        <div className="panel">
+          {filteredServices.length === 0 ? (
+            <p className="empty-state">{t.registry.empty}</p>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t.common.name}</th>
+                  <th>{t.registry.ecosystem}</th>
+                  <th>{t.common.status}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredServices.map((service) => (
+                  <tr key={service.id} className="clickable" onClick={() => onSelectService(service.id)}>
+                    <td className="cell-name">{service.name}</td>
+                    <td>
+                      <span className="tag">{service.ecosystem}</span>
+                    </td>
+                    <td>
+                      <span className={`status-inline ${service.is_complete ? 'good' : 'warn'}`}>
+                        {service.is_complete ? t.registry.complete : t.registry.incomplete}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 

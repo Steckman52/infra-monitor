@@ -1,14 +1,16 @@
+import { TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AdrTable from '../components/AdrTable';
+import { useLanguage } from '../i18n/LanguageContext';
 import { listAdrs, type AdrSummary } from '../services/api';
 
 interface AdrsPageProps {
-  onBack: () => void;
   onSelectAdr: (id: number) => void;
   onViewIssues: () => void;
 }
 
-function AdrsPage({ onBack, onSelectAdr, onViewIssues }: AdrsPageProps) {
+function AdrsPage({ onSelectAdr, onViewIssues }: AdrsPageProps) {
+  const { t } = useLanguage();
   const [adrs, setAdrs] = useState<AdrSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,21 +31,23 @@ function AdrsPage({ onBack, onSelectAdr, onViewIssues }: AdrsPageProps) {
   }, []);
 
   return (
-    <div className="adrs-page">
-      <button type="button" onClick={onBack}>
-        ← Back to registry
-      </button>
-      <h1>Architectural Decision Records</h1>
-      <button type="button" onClick={onViewIssues}>
-        View ADR issues
-      </button>
+    <>
       {error && (
         <p className="load-error" role="alert">
-          {error}
+          <TriangleAlert /> {error}
         </p>
       )}
-      <AdrTable adrs={adrs} onSelectAdr={onSelectAdr} />
-    </div>
+      <div className="section">
+        <div className="section-head">
+          <button type="button" className="link-button" onClick={onViewIssues}>
+            {t.adrs.viewIssues}
+          </button>
+        </div>
+        <div className="panel">
+          <AdrTable adrs={adrs} onSelectAdr={onSelectAdr} />
+        </div>
+      </div>
+    </>
   );
 }
 

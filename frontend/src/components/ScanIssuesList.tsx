@@ -1,34 +1,39 @@
+import { useLanguage } from '../i18n/LanguageContext';
 import type { ScanIssue } from '../services/api';
 
 interface ScanIssuesListProps {
   issues: ScanIssue[];
 }
 
-const ISSUE_TYPE_LABELS: Record<ScanIssue['issue_type'], string> = {
-  unparsable: 'Unparsable manifest',
-  incomplete_data: 'Incomplete data',
-  unreachable_path: 'Unreachable root path',
-};
-
 function ScanIssuesList({ issues }: ScanIssuesListProps) {
+  const { t } = useLanguage();
+
+  const typeLabels: Record<ScanIssue['issue_type'], string> = {
+    unparsable: t.scanIssues.unparsable,
+    incomplete_data: t.scanIssues.incompleteData,
+    unreachable_path: t.scanIssues.unreachablePath,
+  };
+
   if (issues.length === 0) {
-    return <p>No scan issues. Every scanned manifest was parsed successfully.</p>;
+    return <p className="empty-state">{t.scanIssues.empty}</p>;
   }
 
   return (
-    <table className="scan-issues-table">
+    <table className="data-table">
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Manifest / Path</th>
-          <th>Reason</th>
+          <th>{t.common.type}</th>
+          <th>{t.common.path}</th>
+          <th>{t.common.reason}</th>
         </tr>
       </thead>
       <tbody>
         {issues.map((issue) => (
           <tr key={issue.id}>
-            <td>{ISSUE_TYPE_LABELS[issue.issue_type]}</td>
-            <td>{issue.manifest_path}</td>
+            <td>
+              <span className="status-inline warn">{typeLabels[issue.issue_type]}</span>
+            </td>
+            <td className="cell-mono">{issue.manifest_path}</td>
             <td>{issue.reason}</td>
           </tr>
         ))}

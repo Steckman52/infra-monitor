@@ -1,5 +1,8 @@
+import { TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AdrIssuesList from '../components/AdrIssuesList';
+import BackLink from '../components/BackLink';
+import { useLanguage } from '../i18n/LanguageContext';
 import { listAdrIssues, type AdrIssue } from '../services/api';
 
 interface AdrIssuesPageProps {
@@ -7,6 +10,7 @@ interface AdrIssuesPageProps {
 }
 
 function AdrIssuesPage({ onBack }: AdrIssuesPageProps) {
+  const { t } = useLanguage();
   const [issues, setIssues] = useState<AdrIssue[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,17 +31,16 @@ function AdrIssuesPage({ onBack }: AdrIssuesPageProps) {
   }, []);
 
   return (
-    <div className="adr-issues-page">
-      <button type="button" onClick={onBack}>
-        ← Back to ADRs
-      </button>
-      <h1>ADR Issues</h1>
+    <div className="section">
+      <BackLink onClick={onBack} label={t.nav.adrs} />
       {error && (
         <p className="load-error" role="alert">
-          {error}
+          <TriangleAlert /> {error}
         </p>
       )}
-      <AdrIssuesList issues={issues} />
+      <div className="panel">
+        <AdrIssuesList issues={issues} />
+      </div>
     </div>
   );
 }

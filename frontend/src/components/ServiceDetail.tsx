@@ -1,3 +1,5 @@
+import { Bug, FileText, GitCompare, Network } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import type { ServiceDetail as ServiceDetailData } from '../services/api';
 
 interface ServiceDetailProps {
@@ -7,108 +9,168 @@ interface ServiceDetailProps {
 }
 
 function ServiceDetail({ service, onSelectAdr, onSelectErrorGroup }: ServiceDetailProps) {
+  const { t } = useLanguage();
+
   return (
-    <div className="service-detail">
-      <h2>{service.name}</h2>
-      <dl>
-        <dt>Ecosystem</dt>
-        <dd>{service.ecosystem}</dd>
-        <dt>Repository path</dt>
-        <dd>{service.repository_path}</dd>
-        <dt>Manifest path</dt>
-        <dd>{service.manifest_path}</dd>
-        <dt>Status</dt>
-        <dd>{service.is_complete ? 'Complete' : 'Incomplete data'}</dd>
-      </dl>
+    <>
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{service.name}</span>
+        </div>
+        <div className="panel panel-body">
+          <dl className="detail-list">
+            <dt>{t.serviceDetail.ecosystem}</dt>
+            <dd>
+              <span className="tag">{service.ecosystem}</span>
+            </dd>
+            <dt>{t.serviceDetail.repositoryPath}</dt>
+            <dd className="cell-mono">{service.repository_path}</dd>
+            <dt>{t.serviceDetail.manifestPath}</dt>
+            <dd className="cell-mono">{service.manifest_path}</dd>
+            <dt>{t.serviceDetail.status}</dt>
+            <dd>
+              <span className={`status-inline ${service.is_complete ? 'good' : 'warn'}`}>
+                {service.is_complete ? t.registry.complete : t.registry.incomplete}
+              </span>
+            </dd>
+          </dl>
+        </div>
+      </div>
 
-      <h3>Dependencies</h3>
-      {service.dependencies.length === 0 ? (
-        <p>This service declares no dependencies.</p>
-      ) : (
-        <table className="dependency-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Declared Version</th>
-            </tr>
-          </thead>
-          <tbody>
-            {service.dependencies.map((dependency) => (
-              <tr key={dependency.name}>
-                <td>{dependency.name}</td>
-                <td>{dependency.declared_version ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{t.serviceDetail.dependencies}</span>
+        </div>
+        <div className="panel">
+          {service.dependencies.length === 0 ? (
+            <p className="empty-state">{t.serviceDetail.noDependencies}</p>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t.common.name}</th>
+                  <th>{t.serviceDetail.declaredVersion}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {service.dependencies.map((dependency) => (
+                  <tr key={dependency.name}>
+                    <td className="cell-mono">{dependency.name}</td>
+                    <td>{dependency.declared_version ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
 
-      <h3>Compatibility Risks</h3>
-      {service.compatibility_risks.length === 0 ? (
-        <p>No compatibility risks with other services.</p>
-      ) : (
-        <ul className="compatibility-risks">
-          {service.compatibility_risks.map((risk) => (
-            <li key={`${risk.ecosystem}:${risk.name}`}>
-              <strong>{risk.name}</strong> ({risk.declared_version}) conflicts with:{' '}
-              {risk.conflicting_with
-                .map((c) => `${c.service_name} (${c.declared_version ?? '—'})`)
-                .join(', ')}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{t.serviceDetail.compatibilityRisks}</span>
+        </div>
+        <div className="panel">
+          {service.compatibility_risks.length === 0 ? (
+            <p className="empty-state">{t.serviceDetail.noCompatibilityRisks}</p>
+          ) : (
+            service.compatibility_risks.map((risk) => (
+              <div key={`${risk.ecosystem}:${risk.name}`} className="activity-row" style={{ cursor: 'default' }}>
+                <div className="activity-icon warn">
+                  <GitCompare />
+                </div>
+                <div>
+                  <div className="activity-title">
+                    <b>{risk.name}</b> ({risk.declared_version ?? '—'})
+                  </div>
+                  <div className="activity-meta">
+                    {t.serviceDetail.conflictsWith}:{' '}
+                    {risk.conflicting_with.map((c) => `${c.service_name} (${c.declared_version ?? '—'})`).join(', ')}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
-      <h3>Connections</h3>
-      {service.connections.length === 0 ? (
-        <p>Not connected to any other service or external node.</p>
-      ) : (
-        <ul className="connections">
-          {service.connections.map((edge, index) => (
-            <li key={index}>
-              {edge.node.name}
-              {edge.node.type === 'external' && ' (external)'} —{' '}
-              {edge.relationship_basis.replace('_', ' ')}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{t.serviceDetail.connections}</span>
+        </div>
+        <div className="panel">
+          {service.connections.length === 0 ? (
+            <p className="empty-state">{t.serviceDetail.noConnections}</p>
+          ) : (
+            service.connections.map((edge, index) => (
+              <div key={index} className="activity-row" style={{ cursor: 'default' }}>
+                <div className="activity-icon">
+                  <Network />
+                </div>
+                <div className="activity-title">
+                  <b>{edge.node.name}</b>
+                  {edge.node.type === 'external' && ` (${t.serviceDetail.external})`} — {edge.relationship_basis.replace('_', ' ')}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
-      <h3>Related ADRs</h3>
-      {service.related_adrs.length === 0 ? (
-        <p>No ADRs reference this service's repository.</p>
-      ) : (
-        <ul className="related-adrs">
-          {service.related_adrs.map((adr) => (
-            <li key={adr.adr_id}>
-              <button type="button" className="adr-link" onClick={() => onSelectAdr(adr.adr_id)}>
-                {adr.title}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h3>Recent Error Groups</h3>
-      {service.recent_error_groups.length === 0 ? (
-        <p>No log errors attributed to this service.</p>
-      ) : (
-        <ul className="recent-error-groups">
-          {service.recent_error_groups.map((group) => (
-            <li key={group.id}>
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{t.serviceDetail.relatedAdrs}</span>
+        </div>
+        <div className="panel">
+          {service.related_adrs.length === 0 ? (
+            <p className="empty-state">{t.serviceDetail.noRelatedAdrs}</p>
+          ) : (
+            service.related_adrs.map((adr) => (
               <button
+                key={adr.adr_id}
                 type="button"
-                className="error-group-link"
+                className="activity-row"
+                onClick={() => onSelectAdr(adr.adr_id)}
+              >
+                <div className="activity-icon">
+                  <FileText />
+                </div>
+                <div className="activity-title">{adr.title}</div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{t.serviceDetail.recentErrorGroups}</span>
+        </div>
+        <div className="panel">
+          {service.recent_error_groups.length === 0 ? (
+            <p className="empty-state">{t.serviceDetail.noErrorGroups}</p>
+          ) : (
+            service.recent_error_groups.map((group) => (
+              <button
+                key={group.id}
+                type="button"
+                className="activity-row"
                 onClick={() => onSelectErrorGroup(group.id)}
               >
-                {group.severity_marker}: {group.normalized_template}
-              </button>{' '}
-              ({group.occurrence_count} occurrence{group.occurrence_count === 1 ? '' : 's'})
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+                <div className="activity-icon crit">
+                  <Bug />
+                </div>
+                <div>
+                  <div className="activity-title">
+                    <b>{group.severity_marker}</b> {group.normalized_template}
+                  </div>
+                  <div className="activity-meta">{t.serviceDetail.occurrence(group.occurrence_count)}</div>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 

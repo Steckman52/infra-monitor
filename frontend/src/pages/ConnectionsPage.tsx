@@ -1,12 +1,9 @@
+import { TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ConnectionGraphView from '../components/ConnectionGraphView';
 import { listConnections, type NodeConnections } from '../services/api';
 
-interface ConnectionsPageProps {
-  onBack: () => void;
-}
-
-function ConnectionsPage({ onBack }: ConnectionsPageProps) {
+function ConnectionsPage() {
   const [nodes, setNodes] = useState<NodeConnections[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,17 +24,15 @@ function ConnectionsPage({ onBack }: ConnectionsPageProps) {
   }, []);
 
   return (
-    <div className="connections-page">
-      <button type="button" onClick={onBack}>
-        ← Back to registry
-      </button>
-      <h1>Service Connections</h1>
+    <div className="section">
       {error && (
         <p className="load-error" role="alert">
-          {error}
+          <TriangleAlert /> {error}
         </p>
       )}
-      <ConnectionGraphView nodes={nodes} />
+      <div className="panel">
+        <ConnectionGraphView nodes={nodes} />
+      </div>
     </div>
   );
 }

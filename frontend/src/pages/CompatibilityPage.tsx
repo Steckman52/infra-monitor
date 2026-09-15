@@ -1,12 +1,9 @@
+import { TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import CompatibilityTable from '../components/CompatibilityTable';
 import { listCompatibility, type CompatibilityGroup } from '../services/api';
 
-interface CompatibilityPageProps {
-  onBack: () => void;
-}
-
-function CompatibilityPage({ onBack }: CompatibilityPageProps) {
+function CompatibilityPage() {
   const [groups, setGroups] = useState<CompatibilityGroup[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,17 +24,15 @@ function CompatibilityPage({ onBack }: CompatibilityPageProps) {
   }, []);
 
   return (
-    <div className="compatibility-page">
-      <button type="button" onClick={onBack}>
-        ← Back to registry
-      </button>
-      <h1>Dependency Compatibility</h1>
+    <div className="section">
       {error && (
         <p className="load-error" role="alert">
-          {error}
+          <TriangleAlert /> {error}
         </p>
       )}
-      <CompatibilityTable groups={groups} />
+      <div className="panel">
+        <CompatibilityTable groups={groups} />
+      </div>
     </div>
   );
 }

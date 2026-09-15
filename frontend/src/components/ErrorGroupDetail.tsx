@@ -1,3 +1,4 @@
+import { useLanguage } from '../i18n/LanguageContext';
 import type { ErrorGroupDetail as ErrorGroupDetailData } from '../services/api';
 
 interface ErrorGroupDetailProps {
@@ -5,38 +6,62 @@ interface ErrorGroupDetailProps {
 }
 
 function ErrorGroupDetail({ group }: ErrorGroupDetailProps) {
+  const { t } = useLanguage();
+
   return (
-    <div className="error-group-detail">
-      <h2>{group.severity_marker}</h2>
-      <dl>
-        <dt>Service</dt>
-        <dd>{group.service_name ?? `Unattributed (${group.unattributed_source_path})`}</dd>
-        <dt>Template</dt>
-        <dd>{group.normalized_template}</dd>
-        <dt>Occurrences</dt>
-        <dd>{group.occurrence_count}</dd>
-        <dt>First seen</dt>
-        <dd>{group.first_seen ?? 'unknown'}</dd>
-        <dt>Last seen</dt>
-        <dd>{group.last_seen ?? 'unknown'}</dd>
-      </dl>
+    <>
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{group.severity_marker}</span>
+        </div>
+        <div className="panel panel-body">
+          <dl className="detail-list">
+            <dt>{t.errorGroupDetail.service}</dt>
+            <dd>{group.service_name ?? t.errorGroupDetail.unattributed(group.unattributed_source_path ?? '')}</dd>
+            <dt>{t.errorGroupDetail.template}</dt>
+            <dd>{group.normalized_template}</dd>
+            <dt>{t.errorGroupDetail.occurrences}</dt>
+            <dd>{group.occurrence_count}</dd>
+            <dt>{t.errorGroupDetail.firstSeen}</dt>
+            <dd className="cell-mono">{group.first_seen ?? t.errorGroupDetail.unknown}</dd>
+            <dt>{t.errorGroupDetail.lastSeen}</dt>
+            <dd className="cell-mono">{group.last_seen ?? t.errorGroupDetail.unknown}</dd>
+          </dl>
+        </div>
+      </div>
 
-      <h3>Example</h3>
-      <pre className="error-example-text">{group.example_text}</pre>
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{t.errorGroupDetail.example}</span>
+        </div>
+        <div className="panel panel-body">
+          <pre className="cell-mono" style={{ margin: 0, whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
+            {group.example_text}
+          </pre>
+        </div>
+      </div>
 
-      <h3>Occurrences (sample)</h3>
-      <ul className="error-occurrences">
-        {group.occurrences.map((occurrence, index) => (
-          <li key={index}>
-            <div>
-              {occurrence.source_log_path}:{occurrence.line_number}
-              {occurrence.occurred_at && ` — ${occurrence.occurred_at}`}
+      <div className="section">
+        <div className="section-head">
+          <span className="section-title">{t.errorGroupDetail.occurrencesSample}</span>
+        </div>
+        <div className="panel">
+          {group.occurrences.map((occurrence, index) => (
+            <div key={index} className="activity-row" style={{ cursor: 'default' }}>
+              <div style={{ width: '100%' }}>
+                <div className="activity-meta">
+                  {occurrence.source_log_path}:{occurrence.line_number}
+                  {occurrence.occurred_at && ` — ${occurrence.occurred_at}`}
+                </div>
+                <pre className="cell-mono" style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap', overflowX: 'auto' }}>
+                  {occurrence.raw_text}
+                </pre>
+              </div>
             </div>
-            <pre>{occurrence.raw_text}</pre>
-          </li>
-        ))}
-      </ul>
-    </div>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 

@@ -1,4 +1,6 @@
+import { TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import BackLink from '../components/BackLink';
 import ScanIssuesList from '../components/ScanIssuesList';
 import { listScanIssues, type ScanIssue } from '../services/api';
 
@@ -27,17 +29,16 @@ function ScanIssuesPage({ onBack }: ScanIssuesPageProps) {
   }, []);
 
   return (
-    <div className="scan-issues-page">
-      <button type="button" onClick={onBack}>
-        ← Back to registry
-      </button>
-      <h1>Scan Issues</h1>
+    <div className="section">
+      <BackLink onClick={onBack} />
       {error && (
         <p className="load-error" role="alert">
-          {error}
+          <TriangleAlert /> {error}
         </p>
       )}
-      <ScanIssuesList issues={issues} />
+      <div className="panel">
+        <ScanIssuesList issues={issues} />
+      </div>
     </div>
   );
 }

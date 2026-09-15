@@ -1,3 +1,4 @@
+import { useLanguage } from '../i18n/LanguageContext';
 import type { ErrorGroupSummary } from '../services/api';
 
 interface ErrorGroupsTableProps {
@@ -7,19 +8,21 @@ interface ErrorGroupsTableProps {
 }
 
 function ErrorGroupsTable({ groups, onSelectGroup, onSelectService }: ErrorGroupsTableProps) {
+  const { t } = useLanguage();
+
   if (groups.length === 0) {
-    return <p>No error groups yet. Scan a log directory to populate this view.</p>;
+    return <p className="empty-state">{t.logs.empty}</p>;
   }
 
   return (
-    <table className="error-groups-table">
+    <table className="data-table">
       <thead>
         <tr>
-          <th>Service</th>
-          <th>Severity</th>
-          <th>Template</th>
-          <th>Occurrences</th>
-          <th>Last Seen</th>
+          <th>{t.logs.service}</th>
+          <th>{t.logs.severity}</th>
+          <th>{t.logs.template}</th>
+          <th>{t.logs.occurrences}</th>
+          <th>{t.logs.lastSeen}</th>
         </tr>
       </thead>
       <tbody>
@@ -27,25 +30,23 @@ function ErrorGroupsTable({ groups, onSelectGroup, onSelectService }: ErrorGroup
           <tr key={group.id}>
             <td>
               {group.service_id !== null ? (
-                <button
-                  type="button"
-                  className="service-link"
-                  onClick={() => onSelectService(group.service_id as number)}
-                >
+                <button type="button" className="link-button" onClick={() => onSelectService(group.service_id as number)}>
                   {group.service_name}
                 </button>
               ) : (
-                `Unattributed (${group.unattributed_source_path})`
+                <span className="cell-mono">{t.logs.unattributed(group.unattributed_source_path ?? '')}</span>
               )}
             </td>
-            <td>{group.severity_marker}</td>
             <td>
-              <button type="button" className="error-group-link" onClick={() => onSelectGroup(group.id)}>
+              <span className="status-inline crit">{group.severity_marker}</span>
+            </td>
+            <td>
+              <button type="button" className="link-button" onClick={() => onSelectGroup(group.id)}>
                 {group.normalized_template}
               </button>
             </td>
             <td>{group.occurrence_count}</td>
-            <td>{group.last_seen ?? '—'}</td>
+            <td className="cell-mono">{group.last_seen ?? '—'}</td>
           </tr>
         ))}
       </tbody>

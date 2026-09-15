@@ -261,3 +261,12 @@ export async function getDashboard(): Promise<DashboardSummary> {
   const response = await fetch('/api/dashboard');
   return parseJsonOrThrow<DashboardSummary>(response);
 }
+
+export interface PickDirectoryResponse {
+  path: string | null;
+}
+
+export async function pickDirectory(): Promise<PickDirectoryResponse> {
+  const response = await fetch('/api/pick-directory');
+  return parseJsonOrThrow<PickDirectoryResponse>(response);
+}

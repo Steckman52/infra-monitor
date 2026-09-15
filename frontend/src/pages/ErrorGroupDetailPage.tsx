@@ -1,5 +1,8 @@
+import { TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import BackLink from '../components/BackLink';
 import ErrorGroupDetail from '../components/ErrorGroupDetail';
+import { useLanguage } from '../i18n/LanguageContext';
 import { getErrorGroupDetail, type ErrorGroupDetail as ErrorGroupDetailData } from '../services/api';
 
 interface ErrorGroupDetailPageProps {
@@ -8,6 +11,7 @@ interface ErrorGroupDetailPageProps {
 }
 
 function ErrorGroupDetailPage({ groupId, onBack }: ErrorGroupDetailPageProps) {
+  const { t } = useLanguage();
   const [group, setGroup] = useState<ErrorGroupDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,18 +32,16 @@ function ErrorGroupDetailPage({ groupId, onBack }: ErrorGroupDetailPageProps) {
   }, [groupId]);
 
   return (
-    <div className="error-group-detail-page">
-      <button type="button" onClick={onBack}>
-        ← Back to log errors
-      </button>
+    <>
+      <BackLink onClick={onBack} label={t.nav.logs} />
       {error && (
         <p className="load-error" role="alert">
-          {error}
+          <TriangleAlert /> {error}
         </p>
       )}
-      {!error && !group && <p>Loading…</p>}
+      {!error && !group && <p className="loading-state">{t.common.loading}</p>}
       {group && <ErrorGroupDetail group={group} />}
-    </div>
+    </>
   );
 }
 

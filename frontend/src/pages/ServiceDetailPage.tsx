@@ -1,5 +1,8 @@
+import { TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import BackLink from '../components/BackLink';
 import ServiceDetail from '../components/ServiceDetail';
+import { useLanguage } from '../i18n/LanguageContext';
 import { getServiceDetail, type ServiceDetail as ServiceDetailData } from '../services/api';
 
 interface ServiceDetailPageProps {
@@ -10,6 +13,7 @@ interface ServiceDetailPageProps {
 }
 
 function ServiceDetailPage({ serviceId, onBack, onSelectAdr, onSelectErrorGroup }: ServiceDetailPageProps) {
+  const { t } = useLanguage();
   const [service, setService] = useState<ServiceDetailData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,24 +34,16 @@ function ServiceDetailPage({ serviceId, onBack, onSelectAdr, onSelectErrorGroup 
   }, [serviceId]);
 
   return (
-    <div className="service-detail-page">
-      <button type="button" onClick={onBack}>
-        ← Back to registry
-      </button>
+    <>
+      <BackLink onClick={onBack} label={t.nav.services} />
       {error && (
         <p className="load-error" role="alert">
-          {error}
+          <TriangleAlert /> {error}
         </p>
       )}
-      {!error && !service && <p>Loading…</p>}
-      {service && (
-        <ServiceDetail
-          service={service}
-          onSelectAdr={onSelectAdr}
-          onSelectErrorGroup={onSelectErrorGroup}
-        />
-      )}
-    </div>
+      {!error && !service && <p className="loading-state">{t.common.loading}</p>}
+      {service && <ServiceDetail service={service} onSelectAdr={onSelectAdr} onSelectErrorGroup={onSelectErrorGroup} />}
+    </>
   );
 }
 

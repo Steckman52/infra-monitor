@@ -1,3 +1,5 @@
+import { TriangleAlert } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import type { AdrSummary } from '../services/api';
 
 interface AdrTableProps {
@@ -6,30 +8,36 @@ interface AdrTableProps {
 }
 
 function AdrTable({ adrs, onSelectAdr }: AdrTableProps) {
+  const { t } = useLanguage();
+
   if (adrs.length === 0) {
-    return <p>No ADRs found. Scan a repository containing a docs/adr directory.</p>;
+    return <p className="empty-state">{t.adrs.empty}</p>;
   }
 
   return (
-    <table className="adr-table">
+    <table className="data-table">
       <thead>
         <tr>
-          <th>Title</th>
-          <th>Status</th>
-          <th>Date</th>
-          <th>Source</th>
+          <th>{t.common.name}</th>
+          <th>{t.common.status}</th>
+          <th>{t.adrs.date}</th>
+          <th>{t.adrs.source}</th>
         </tr>
       </thead>
       <tbody>
         {adrs.map((adr) => (
-          <tr key={adr.id} onClick={() => onSelectAdr(adr.id)} style={{ cursor: 'pointer' }}>
-            <td>
+          <tr key={adr.id} className="clickable" onClick={() => onSelectAdr(adr.id)}>
+            <td className="cell-name">
               {adr.title}
-              {adr.has_secret_warning && <span title="Possible secret detected"> ⚠️</span>}
+              {adr.has_secret_warning && (
+                <span title={t.adrs.secretWarning} style={{ marginLeft: 6, verticalAlign: 'middle', display: 'inline-flex' }}>
+                  <TriangleAlert size={13} color="var(--warn)" />
+                </span>
+              )}
             </td>
             <td>{adr.normalized_status}</td>
-            <td>{adr.date ?? '—'}</td>
-            <td>{adr.source_path}</td>
+            <td className="cell-mono">{adr.date ?? '—'}</td>
+            <td className="cell-mono">{adr.source_path}</td>
           </tr>
         ))}
       </tbody>

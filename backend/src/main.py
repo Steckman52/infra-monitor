@@ -9,6 +9,7 @@ from src.api import (
     connections,
     dashboard,
     error_groups,
+    filesystem,
     log_scan,
     log_scan_issues,
     scan,
@@ -36,3 +37,4 @@ app.include_router(log_scan_issues.router)
 app.include_router(adrs.router)
 app.include_router(adr_issues.router)
 app.include_router(dashboard.router)
+app.include_router(filesystem.router)
