@@ -1,6 +1,6 @@
 import pytest
 
-from src.scanning.parsed_manifest import ManifestParseError
+from src.scanning.parsed_manifest import ManifestParseError, ParsedDependency
 from src.scanning.parsers import package_json
 
 
@@ -41,6 +41,39 @@ def test_invalid_json_raises_manifest_parse_error(tmp_path):
 def test_non_object_json_raises_manifest_parse_error(tmp_path):
     manifest = tmp_path / "package.json"
     manifest.write_text("[1, 2, 3]", encoding="utf-8")
+
+    with pytest.raises(ManifestParseError):
+        package_json.parse(manifest)
+
+
+def test_dependencies_not_an_object_raises_manifest_parse_error(tmp_path):
+    # A real npm tool would never write this, but nothing stops a hand-edited
+    # or generated package.json from doing so -- previously crashed the whole
+    # scan with an uncaught AttributeError on list.items().
+    manifest = tmp_path / "package.json"
+    manifest.write_text('{"name": "x", "dependencies": ["not", "a", "dict"]}', encoding="utf-8")
+
+    with pytest.raises(ManifestParseError):
+        package_json.parse(manifest)
+
+
+def test_non_string_dependency_version_is_treated_as_not_declared(tmp_path):
+    manifest = tmp_path / "package.json"
+    manifest.write_text(
+        '{"name": "x", "dependencies": {"react": {"version": "18.0.0"}}}', encoding="utf-8"
+    )
+
+    result = package_json.parse(manifest)
+
+    assert result.dependencies == [ParsedDependency(name="react", declared_version=None)]
+
+
+def test_deeply_nested_json_raises_manifest_parse_error(tmp_path):
+    # json.loads raises RecursionError (not JSONDecodeError) on pathologically
+    # nested input -- previously uncaught, crashing the whole scan request.
+    manifest = tmp_path / "package.json"
+    depth = 5000
+    manifest.write_text("[" * depth + "]" * depth, encoding="utf-8")
 
     with pytest.raises(ManifestParseError):
         package_json.parse(manifest)

@@ -25,3 +25,12 @@ def test_collision_appends_suffix():
     assert name != "service"
     assert name.startswith("service")
     assert name not in existing
+
+
+def test_non_string_explicit_name_falls_back_to_directory_name():
+    # A manifest's "name" field is arbitrary JSON -- a number or object would
+    # otherwise reach the DB layer and fail as a SQLite bind-parameter error.
+    name = name_resolution.resolve_name(
+        12345, Path("/repos/inventory-service/package.json"), set()
+    )
+    assert name == "inventory-service"

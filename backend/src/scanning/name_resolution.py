@@ -6,6 +6,11 @@ def resolve_name(explicit_name: str | None, manifest_path: Path, existing_names:
     repository-path-derived suffix on collision. Does not mutate `existing_names` —
     the caller adds the returned name once it commits to using it.
     """
+    # A manifest's name field is free-form user/tool-authored JSON (or XML)
+    # content -- a non-string value (number, object, array) would otherwise
+    # flow straight into a SQLite String column and fail at insert time.
+    if not isinstance(explicit_name, str):
+        explicit_name = None
     base_name = explicit_name or manifest_path.parent.name
 
     if base_name not in existing_names:
