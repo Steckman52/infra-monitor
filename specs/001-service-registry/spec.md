@@ -103,7 +103,7 @@ appear in the scan-issues view with an explanatory reason, separate from the nor
   service name? The system MUST disambiguate them (e.g., by appending a repository-path-derived
   suffix) rather than silently merging or overwriting one with the other.
 - What happens when a manifest sits inside a well-known dependency-installation directory (e.g.,
-  `node_modules`, `vendor`, `target`, `.venv`, `site-packages`) nested within a scanned
+  `node_modules`, `vendor`, `target`, `.venv`, `venv`, `env`, `site-packages`) nested within a scanned
   repository? These MUST be excluded from scanning — they belong to third-party dependencies,
   not to a company-owned service.
 - What happens when the same directory contains two different manifest types (e.g., both
@@ -132,7 +132,7 @@ appear in the scan-issues view with an explanatory reason, separate from the nor
 - **FR-005**: System MUST treat every discovered manifest as a distinct service, so that a
   repository containing multiple manifests (a monorepo) produces multiple registry entries.
 - **FR-006**: System MUST exclude manifests located inside well-known dependency-installation
-  directories (including but not limited to `node_modules`, `vendor`, `target`, `.venv`,
+  directories (including but not limited to `node_modules`, `vendor`, `target`, `.venv`, `venv`, `env`,
   `site-packages`, `__pycache__`) from being registered as services.
 - **FR-007**: System MUST parse each manifest independently, such that a parsing failure on one
   manifest file does not stop or affect the scanning of any other manifest file.
@@ -197,7 +197,7 @@ appear in the scan-issues view with an explanatory reason, separate from the nor
   semantic version normalization or resolution — that belongs to the Dependency Map feature.
 - Scanning is triggered manually by the user on demand; there is no background file-system
   watcher or scheduled automatic re-scan in this version.
-- Well-known dependency-installation directories (`node_modules`, `vendor`, `target`, `.venv`,
+- Well-known dependency-installation directories (`node_modules`, `vendor`, `target`, `.venv`, `venv`, `env`,
   `site-packages`, `__pycache__`, and similar) are excluded from scanning by default.
 - Manual override of an auto-derived service name is out of scope for this version (deferred as
   a future extension), so the name-derivation priority order in FR-004 is final for any given

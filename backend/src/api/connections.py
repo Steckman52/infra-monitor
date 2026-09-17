@@ -14,6 +14,7 @@ class NodeRef(BaseModel):
     type: str
     id: int
     name: str
+    repository_path: str | None = None
 
 
 class ConnectionOut(BaseModel):
@@ -30,7 +31,16 @@ def _ref(service: Service | None, external_node: ExternalNode | None) -> NodeRef
     if service is not None:
         return NodeRef(type="service", id=service.id, name=service.name)
     if external_node is not None:
-        return NodeRef(type="external", id=external_node.id, name=external_node.name)
+        # Two independent repositories can declare a compose service with the
+        # same generic name (e.g. "db"); they stay distinct rows (ExternalNode
+        # is unique on name + source_compose_path), but without the
+        # repository_path the UI has no way to tell them apart.
+        return NodeRef(
+            type="external",
+            id=external_node.id,
+            name=external_node.name,
+            repository_path=external_node.repository_path,
+        )
     return None
 
 

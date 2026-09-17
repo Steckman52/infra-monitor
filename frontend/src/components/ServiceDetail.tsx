@@ -108,7 +108,9 @@ function ServiceDetail({ service, onSelectAdr, onSelectErrorGroup }: ServiceDeta
                 </div>
                 <div className="activity-title">
                   <b>{edge.node.name}</b>
-                  {edge.node.type === 'external' && ` (${t.serviceDetail.external})`} — {edge.relationship_basis.replace('_', ' ')}
+                  {edge.node.type === 'external' &&
+                    ` (${t.serviceDetail.external}${edge.node.repository_path ? ` — ${edge.node.repository_path}` : ''})`}{' '}
+                  — {edge.relationship_basis.replace('_', ' ')}
                 </div>
               </div>
             ))

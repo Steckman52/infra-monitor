@@ -43,7 +43,7 @@ def test_full_scan_produces_expected_registry(db_session, fixtures_dir):
     monorepo_services = [s for s in services if "repo-monorepo" in s.repository_path]
     assert len(monorepo_services) == 2  # Acceptance Scenario 2 / FR-005
 
-    vendor_related = [s for s in services if "node_modules" in s.manifest_path]
+    vendor_related = [s for s in services if "node_modules" in s.manifest_path or "venv" in s.manifest_path]
     assert vendor_related == []  # FR-006
 
     incomplete = [s for s in services if not s.is_complete]

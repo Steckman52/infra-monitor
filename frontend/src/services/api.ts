@@ -114,6 +114,7 @@ export interface NodeRef {
   type: 'service' | 'external';
   id: number;
   name: string;
+  repository_path: string | null;
 }
 
 export interface ConnectionEdge {

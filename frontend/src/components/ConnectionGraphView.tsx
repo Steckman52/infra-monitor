@@ -16,6 +16,16 @@ function ConnectionGraphView({ nodes }: ConnectionGraphViewProps) {
   const basisLabel = (basis: string) =>
     basis === 'shared_network' ? t.connections.sharedNetwork : basis === 'depends_on' ? t.connections.dependsOn : t.connections.both;
 
+  // Two unrelated repositories can declare a compose service with the same
+  // generic name (e.g. "db"); without the repository path they'd render as
+  // if they were the same external node.
+  const nodeLabel = (node: NodeConnections['node']) =>
+    node.type === 'external' && node.repository_path
+      ? `${node.name} (${t.serviceDetail.external} — ${node.repository_path})`
+      : node.type === 'external'
+        ? `${node.name} (${t.serviceDetail.external})`
+        : node.name;
+
   return (
     <>
       {nodes.map((entry) => (
@@ -25,13 +35,11 @@ function ConnectionGraphView({ nodes }: ConnectionGraphViewProps) {
           </div>
           <div>
             <div className="activity-title">
-              <b>{entry.node.name}</b>
-              {entry.node.type === 'external' && ` (${t.serviceDetail.external})`}
+              <b>{nodeLabel(entry.node)}</b>
             </div>
             {entry.connections.map((edge, index) => (
               <div key={index} className="activity-meta">
-                → {edge.node.name}
-                {edge.node.type === 'external' && ` (${t.serviceDetail.external})`} — {basisLabel(edge.relationship_basis)}
+                → {nodeLabel(edge.node)} — {basisLabel(edge.relationship_basis)}
               </div>
             ))}
           </div>

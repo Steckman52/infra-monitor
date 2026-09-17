@@ -45,3 +45,34 @@ def test_same_major_across_services_is_compatible(db_session, fixtures_dir):
     assert group.status == "compatible"  # Acceptance Scenario 1
     assert group.has_not_comparable is False
     assert {e.major_version for e in group.entries} == {2}
+
+
+def test_differing_minor_on_zero_major_is_a_risk(db_session, fixtures_dir):
+    # Real-world case: fastapi (and most pre-1.0 packages) never leaves
+    # major 0, so major-only comparison would call >=0.104 and >=0.115
+    # "compatible" no matter how far apart they drifted.
+    run_scan(
+        db_session,
+        [str(fixtures_dir / "repo-zero-major-a"), str(fixtures_dir / "repo-zero-major-b")],
+    )
+
+    groups = compute_compatibility(db_session)
+
+    assert len(groups) == 1
+    group = groups[0]
+    assert group.name == "fastapi"
+    assert group.status == "compatibility_risk"
+    assert {e.major_version for e in group.entries} == {0}  # major alone still reads as identical
+
+
+def test_same_minor_on_zero_major_is_compatible(db_session, fixtures_dir):
+    run_scan(
+        db_session,
+        [str(fixtures_dir / "repo-zero-major-a"), str(fixtures_dir / "repo-zero-major-c")],
+    )
+    # Both pin fastapi 0.104.x -- same major.minor, differing patch only.
+
+    groups = compute_compatibility(db_session)
+
+    assert len(groups) == 1
+    assert groups[0].status == "compatible"

@@ -44,7 +44,7 @@ types completes in under 30 seconds on a typical developer machine.
 
 **Constraints**: Fully offline-capable — scanning, parsing, and storage require no
 network access; directory traversal MUST prune excluded directories (`node_modules`,
-`vendor`, `target`, `.venv`, `site-packages`, `__pycache__`, `.git`) rather than
+`vendor`, `target`, `.venv`, `venv`, `env`, `site-packages`, `__pycache__`, `.git`) rather than
 walking into them, to keep scan time bounded on large repositories.
 
 **Scale/Scope**: Single-user local install per engineer/architect; on the order of

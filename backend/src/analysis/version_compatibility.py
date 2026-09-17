@@ -8,6 +8,7 @@ from src.models.dependency import Dependency
 from src.models.service import Service
 
 _LEADING_DIGITS_RE = re.compile(r"\D*(\d+)")
+_MAJOR_MINOR_RE = re.compile(r"\D*(\d+)\D+(\d+)")
 
 
 def extract_major_version(declared_version: str | None) -> int | None:
@@ -22,6 +23,23 @@ def extract_major_version(declared_version: str | None) -> int | None:
     if not match:
         return None
     return int(match.group(1))
+
+
+def extract_effective_version(declared_version: str | None) -> tuple[int, ...] | None:
+    """The unit two declared versions are actually compared on. Per SemVer's
+    own rule (https://semver.org/#spec-item-4), while major is 0 the API is
+    still unstable and a minor bump is the breaking-change boundary -- so
+    comparing major alone would call fastapi>=0.104 and fastapi>=0.115
+    "compatible" just because both happen to be pre-1.0. Everything with a
+    nonzero major keeps the existing major-only comparison.
+    """
+    major = extract_major_version(declared_version)
+    if major is None:
+        return None
+    if major != 0:
+        return (major,)
+    match = _MAJOR_MINOR_RE.match(declared_version)
+    return (0, int(match.group(2))) if match else (0,)
 
 
 def status_for_majors(major_versions: list[int | None]) -> tuple[str, bool]:
@@ -42,6 +60,7 @@ class CompatibilityEntry:
     service_name: str
     declared_version: str | None
     major_version: int | None
+    effective_version: tuple[int, ...] | None = None
 
 
 @dataclass
@@ -84,10 +103,11 @@ def compute_compatibility(session: Session) -> list[CompatibilityGroup]:
                 service_name=service_name,
                 declared_version=declared_version,
                 major_version=extract_major_version(declared_version),
+                effective_version=extract_effective_version(declared_version),
             )
             for service_id, service_name, declared_version in raw_entries
         ]
-        status, has_not_comparable = status_for_majors([e.major_version for e in entries])
+        status, has_not_comparable = status_for_majors([e.effective_version for e in entries])
         groups.append(
             CompatibilityGroup(
                 name=dep_name,
@@ -123,7 +143,7 @@ def risks_for_service(groups: list[CompatibilityGroup], service_id: int) -> list
     risks: list[CompatibilityRisk] = []
     for group in groups:
         own = next((e for e in group.entries if e.service_id == service_id), None)
-        if own is None or own.major_version is None:
+        if own is None or own.effective_version is None:
             continue
 
         conflicting = [
@@ -132,8 +152,8 @@ def risks_for_service(groups: list[CompatibilityGroup], service_id: int) -> list
             )
             for e in group.entries
             if e.service_id != service_id
-            and e.major_version is not None
-            and e.major_version != own.major_version
+            and e.effective_version is not None
+            and e.effective_version != own.effective_version
         ]
         if conflicting:
             risks.append(

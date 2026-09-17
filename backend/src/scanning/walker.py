@@ -7,6 +7,8 @@ EXCLUDED_DIR_NAMES = {
     "vendor",
     "target",
     ".venv",
+    "venv",
+    "env",
     "site-packages",
     "__pycache__",
     ".git",
