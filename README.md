@@ -96,3 +96,7 @@ what the tool may do. Three of them shape it most visibly:
   storage. IP addresses deliberately are not, since they are operationally
   necessary — the reasoning is recorded in
   [ADR 0011](docs/adr/0011-redact-emails-not-ips-from-log-text.md).
+
+## License
+
+[MIT](LICENSE).
