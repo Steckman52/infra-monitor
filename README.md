@@ -1,0 +1,98 @@
+# Infrastructure Monitoring Tool
+
+A local-first tool for keeping track of what a team's infrastructure
+actually consists of. Point it at the repositories and log directories you
+already have on disk, and it builds a picture of them: which services
+exist, which dependency versions disagree with each other, how services
+connect, which errors keep recurring, and which architectural decisions
+were recorded about them.
+
+Everything runs on one machine against the local filesystem. There is no
+network access, no telemetry, no external service, and no account — the
+data never leaves the computer it was scanned on.
+
+## What it does
+
+Four features, each independently usable:
+
+* **Service registry** — walks the repository roots you give it and
+  registers every service it finds from its package manifest
+  (`package.json`, `pom.xml`, `requirements.txt`, `go.mod`,
+  `composer.json`). Manifests that are malformed or incomplete are
+  reported as scan issues rather than silently skipped.
+* **Dependency map** — flags dependencies shared by more than one service
+  whose declared versions disagree, and derives a connection graph between
+  services from `docker-compose.yml` networks and `depends_on` entries.
+* **Log error analysis** — scans a local log directory, attributes files to
+  registered services, and groups recurring errors by normalising the
+  variable parts (timestamps, IDs, numbers) out of each message. Email
+  addresses are redacted before anything is stored.
+* **ADR module** — imports Markdown ADRs from `docs/adr/`, resolves their
+  supersedes/amends relationships, links them to the services they concern,
+  and flags any whose content resembles a leaked secret.
+
+A dashboard ties the four together: what currently needs attention, and
+when each scan last ran. The interface is available in English and Russian.
+
+## Running it
+
+Two processes, backend first.
+
+```bash
+cd backend
+python -m venv .venv
+. .venv/Scripts/activate   # or: source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn src.main:app --reload --port 8000
+```
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open the address Vite prints (by default `http://localhost:5173`). The
+dev server proxies `/api/*` to the backend on port 8000.
+
+Requires Python 3.12+ and Node 20.19+ (or 22.12+), as Vite 8 needs. The
+database is a SQLite file created on first run at
+`backend/data/registry.db`; deleting it resets everything.
+
+## Tests
+
+```bash
+cd backend && pytest
+```
+
+175 tests covering the parsers, the scan orchestration, the analysis
+functions, and every API endpoint's contract.
+
+## How it is built
+
+* **Backend** — Python, FastAPI, SQLAlchemy, SQLite. See
+  [backend/README.md](backend/README.md) for the module layout and the full
+  endpoint list.
+* **Frontend** — React, TypeScript, Vite. See
+  [frontend/README.md](frontend/README.md).
+
+The project was developed spec-first: every feature has a specification,
+an implementation plan, and a task breakdown under [specs/](specs/), written
+before the code. Design decisions that were not obvious in hindsight are
+recorded as ADRs in [docs/adr/](docs/adr/) — the tool's own ADR module reads
+them, so the project is its own test subject.
+
+Development is governed by a
+[constitution](.specify/memory/constitution.md) whose principles constrain
+what the tool may do. Three of them shape it most visibly:
+
+* **No AI/ML.** Every result is produced by explicit rules. Error grouping
+  is regex normalisation, not clustering; version conflicts are version
+  comparison, not prediction. Anything the tool reports can be traced to a
+  specific line in a specific file.
+* **Local-first.** No network access at any point, and a failure in one
+  file never aborts a scan — it is reported and the scan continues.
+* **No personal data.** Email addresses are redacted from log text before
+  storage. IP addresses deliberately are not, since they are operationally
+  necessary — the reasoning is recorded in
+  [ADR 0011](docs/adr/0011-redact-emails-not-ips-from-log-text.md).

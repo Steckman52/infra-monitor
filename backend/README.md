@@ -23,17 +23,23 @@ the architectural decisions behind this backend.
   dedup), `adr_secrets.py` (secret-pattern heuristic), the `scan_service`
   orchestrator (repository scan, one transaction, now covering the
   registry, connections, and ADRs together), `error_detection.py`/
-  `normalization.py`, and the `log_scan_service` orchestrator (log scan,
-  its own independent transaction).
-* `src/analysis/` — `version_compatibility.py`: major-version extraction
-  and compatibility grouping, computed on read (not persisted).
+  `normalization.py`, `pii_redaction.py` (strips email-shaped substrings
+  from stored log text, per Principle III — see
+  [ADR 0011](../docs/adr/0011-redact-emails-not-ips-from-log-text.md)),
+  and the `log_scan_service` orchestrator (log scan, its own independent
+  transaction).
+* `src/analysis/` — `version_compatibility.py`: version extraction and
+  compatibility grouping, computed on read (not persisted). Versions are
+  compared on major alone, except while major is `0`, where SemVer makes
+  the minor the breaking-change boundary and it is compared too.
 * `src/models/` — SQLAlchemy models: `Service`, `Dependency`, `ScanIssue`,
   `ExternalNode`, `ServiceConnection`, `ErrorGroup`, `ErrorOccurrence`,
   `LogScanIssue`, `AdrRecord`, `AdrRelationship`, `AdrServiceAssociation`,
   `AdrImportIssue`.
 * `src/api/` — FastAPI routers: `scan.py`, `services.py`, `scan_issues.py`,
   `compatibility.py`, `connections.py`, `log_scan.py`, `error_groups.py`,
-  `log_scan_issues.py`, `adrs.py`, `adr_issues.py`.
+  `log_scan_issues.py`, `adrs.py`, `adr_issues.py`, `dashboard.py`,
+  `filesystem.py`.
 * `src/db.py` — SQLite engine/session setup.
 
 ## Public interface
@@ -65,6 +71,12 @@ full request/response contract of every endpoint:
   services.
 * `GET /api/adr-issues` — ADR files that failed to parse, and imported ADRs
   flagged for resembling a secret.
+* `GET /api/dashboard` — the cross-feature counts and last-scan timestamps
+  the overview screen is built from.
+* `GET /api/pick-directory` — opens a native folder-selection dialog on the
+  machine running the backend and returns the chosen path, so scan roots
+  can be picked instead of typed. Only meaningful because this tool's
+  backend and browser always run on the same machine (Principle II).
 
 ## Running locally
 
