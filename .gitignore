@@ -16,6 +16,15 @@ frontend/build/
 # ...except committed test fixtures that are deliberately real .log files
 !backend/tests/integration/fixtures/**/*.log
 
+# Likewise, the dependency-directory decoys under tests/fixtures are the
+# whole point of the FR-006 exclusion tests -- without them committed, those
+# tests pass vacuously on a fresh clone. The directory itself has to be
+# re-included first: git never descends into an excluded directory.
+!backend/tests/integration/fixtures/**/node_modules/
+!backend/tests/integration/fixtures/**/venv/
+!backend/tests/integration/fixtures/**/node_modules/**
+!backend/tests/integration/fixtures/**/venv/**
+
 # Local SQLite data
 data/
 *.db
