@@ -32,7 +32,9 @@ services, and import issues. Available in English and Russian. Talks to the
 * `src/index.css` — the design tokens (OKLCH colour ramps, type scale,
   radii, shadows) and the shared component classes every screen is built
   from.
-* `src/services/api.ts` — typed `fetch` wrappers for every backend endpoint.
+* `src/services/api.ts` — typed `fetch` wrappers for every backend endpoint,
+  with a read timeout and error messages a user can act on.
+* `src/utils/paging.ts` — incremental "show more" rendering for long tables.
 
 ## Running locally
 
@@ -48,4 +50,10 @@ The dev server proxies `/api/*` to `http://localhost:8000` (see
 
 ```bash
 npm run build
+```
+
+## Testing
+
+```bash
+npm test
 ```

@@ -36,37 +36,65 @@ when each scan last ran. The interface is available in English and Russian.
 
 ## Running it
 
-Two processes, backend first.
+One command. It creates the Python environment and builds the interface the
+first time, then serves the interface and the API together from a single
+process.
 
 ```bash
-cd backend
-python -m venv .venv
-. .venv/Scripts/activate   # or: source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn src.main:app --reload --port 8000
+run.cmd
+```
+
+On macOS or Linux, use `./run.sh` instead. Then open
+**http://localhost:8000**.
+
+Requires Python 3.12+ and Node 20.19+ (or 22.12+, as Vite 8 needs) — Node
+only for the one-off interface build. The database is a SQLite file created
+on first run at `backend/data/registry.db`; deleting it resets everything.
+
+<details>
+<summary>Running the two processes separately, for frontend development</summary>
+
+```bash
+cd backend && uvicorn src.main:app --reload --port 8000
 ```
 
 ```bash
-cd frontend
-npm install
-npm run dev
+cd frontend && npm run dev
 ```
 
-Then open the address Vite prints (by default `http://localhost:5173`). The
-dev server proxies `/api/*` to the backend on port 8000.
+Vite then serves the interface on `http://localhost:5173` with hot reload,
+proxying `/api/*` to the backend.
+</details>
 
-Requires Python 3.12+ and Node 20.19+ (or 22.12+), as Vite 8 needs. The
-database is a SQLite file created on first run at
-`backend/data/registry.db`; deleting it resets everything.
+## Configuration
+
+Nothing needs configuring to run it. For the cases that come up in practice,
+these environment variables are read at startup:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `INFRA_MONITOR_DB_PATH` | `backend/data/registry.db` | Where the database lives |
+| `INFRA_MONITOR_MAX_DIRECTORIES` | `50000` | Directories visited per scan root; hitting it is reported, never silent |
+| `INFRA_MONITOR_MAX_LOG_FILE_MB` | `200` | Larger log files are skipped and reported |
+| `INFRA_MONITOR_EXCLUDED_DIRS` | — | Extra directory names to skip, comma-separated (e.g. `.gradle,Pods,build`) |
+| `INFRA_MONITOR_ALLOWED_HOSTS` | — | Extra hostnames the API answers to, beyond `localhost` |
+| `INFRA_MONITOR_PORT` | `8000` | Port used by `run.cmd` / `run.sh` |
+
+The API has no authentication: it is meant for one person on their own
+machine and only answers requests addressed to `localhost`. Don't expose it
+on a network interface.
 
 ## Tests
 
 ```bash
 cd backend && pytest
+cd frontend && npm test
 ```
 
-175 tests covering the parsers, the scan orchestration, the analysis
-functions, and every API endpoint's contract.
+The backend suite covers the parsers against real-world formats, the scan
+orchestration and its failure modes, the analysis functions, and every API
+endpoint's contract. CI runs both suites and the production build on every
+push.
 
 ## How it is built
 
@@ -92,9 +120,10 @@ what the tool may do. Three of them shape it most visibly:
   specific line in a specific file.
 * **Local-first.** No network access at any point, and a failure in one
   file never aborts a scan — it is reported and the scan continues.
-* **No personal data.** Email addresses are redacted from log text before
-  storage. IP addresses deliberately are not, since they are operationally
-  necessary — the reasoning is recorded in
+* **No personal data.** Email addresses and credential values are redacted
+  from anything the tool stores, log text and ADR content alike. IP
+  addresses deliberately are not, since they are operationally necessary —
+  the reasoning, and the limits of the redaction, are recorded in
   [ADR 0011](docs/adr/0011-redact-emails-not-ips-from-log-text.md).
 
 ## License

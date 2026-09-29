@@ -13,7 +13,7 @@ license/maintenance risk (Principle VII).
 
 **Alternatives considered**: A third-party `go.mod` parser package — rejected for
 this scope; the marginal robustness gain (handling `replace`/`exclude` directives we
-don't need yet) doesn't justify an extra dependency for a diploma-scoped feature.
+don't need yet) doesn't justify an extra dependency for a feature of this scope.
 
 ## 2. `pom.xml` parsing approach
 

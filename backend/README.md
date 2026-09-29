@@ -40,7 +40,10 @@ the architectural decisions behind this backend.
   `compatibility.py`, `connections.py`, `log_scan.py`, `error_groups.py`,
   `log_scan_issues.py`, `adrs.py`, `adr_issues.py`, `dashboard.py`,
   `filesystem.py`.
-* `src/db.py` — SQLite engine/session setup.
+* `src/db.py` — SQLite engine/session setup, and a startup check that refuses
+  a database written by an older schema instead of failing later on every read.
+* `src/config.py` — the `INFRA_MONITOR_*` environment variables (see the
+  root README), each with a default that needs no configuration.
 
 ## Public interface
 

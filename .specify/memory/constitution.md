@@ -31,7 +31,7 @@ All analysis performed by the system — log error grouping, version compatibili
 dependency relationship mapping — MUST be implemented exclusively through deterministic
 rules, templates, and regular expressions. The product MUST NOT embed or call machine
 learning models, embeddings, LLMs, or any statistical/AI-based inference at runtime.
-Rationale: this is a hard, non-negotiable requirement of the diploma project; every
+Rationale: this is a hard, non-negotiable requirement of the project; every
 analytical feature must remain fully rule-based and auditable.
 
 ### II. Local-First & Resilient
@@ -57,16 +57,16 @@ relationship between services) MUST be traceable to the specific rule, pattern, 
 source manifest/file that produced it. The system MUST NOT expose a result without
 being able to show its derivation. No black-box behavior is permitted anywhere.
 Rationale: directly enforces Principle I and makes the system's output verifiable and
-defensible in an academic/diploma review context.
+defensible to anyone who has to act on it.
 
 ### V. Test-First & Simplicity
 Critical logic — package manifest parsing, version comparison, log pattern matching,
 ADR/MADR import — MUST have tests written before implementation. The overall
-architecture MUST stay simple and proportionate to the scope of a diploma project:
+architecture MUST stay simple and proportionate to the project's scope:
 avoid speculative abstractions, unnecessary layers, or infrastructure not justified by
 a current requirement.
-Rationale: keeps the project deliverable within diploma timelines while still
-demonstrating sound engineering practice on the parts most likely to break silently.
+Rationale: keeps the project small enough to maintain while still applying sound
+engineering practice to the parts most likely to break silently.
 
 ### VI. Documentation & Dogfooding
 Every module MUST have minimal documentation covering its purpose, public interface,
@@ -74,13 +74,14 @@ and how to run it. The project's own architectural decisions MUST be recorded as
 in this repository's `docs/adr/`, using the same ADR module and MADR format that the
 system itself implements for its users.
 Rationale: demonstrates the system's own methodology is practical by applying it to
-itself, and keeps design rationale discoverable for the diploma defense.
+itself, and keeps design rationale discoverable for future maintainers.
 
 ### VII. Permissive Licensing
 All dependencies and libraries used by the product itself MUST carry permissive
 licenses (MIT, Apache-2.0, BSD, or equivalent). Copyleft licenses (GPL, AGPL, and
 similar) MUST NOT be introduced into the product's own stack.
-Rationale: avoids licensing obligations inappropriate for an academic deliverable.
+Rationale: keeps the tool freely redistributable and usable inside companies without
+licensing obligations.
 Scanning the *licenses of dependencies inside company repositories being monitored* is
 a distinct, larger feature and is explicitly out of scope for v1.0.0 (see Scope
 Boundaries).
@@ -98,7 +99,7 @@ sensitive architecture details even though Principle III excludes personal data.
 
 ## Scope Boundaries
 
-The product's functional scope for this diploma project is limited to four modules:
+The product's functional scope is limited to four modules:
 (1) service registry built by scanning package-manager manifests (`package.json`,
 `pom.xml`, `requirements.txt`, `go.mod`, `composer.json`); (2) a dependency map and
 version-compatibility check derived from those manifests plus `docker-compose.yml` /
