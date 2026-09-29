@@ -1,5 +1,7 @@
 # Infrastructure Monitoring Tool
 
+[![CI](https://github.com/Steckman52/infra-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/Steckman52/infra-monitor/actions/workflows/ci.yml)
+
 A local-first tool for keeping track of what a team's infrastructure
 actually consists of. Point it at the repositories and log directories you
 already have on disk, and it builds a picture of them: which services
