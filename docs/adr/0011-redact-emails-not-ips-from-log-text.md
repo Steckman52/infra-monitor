@@ -75,6 +75,39 @@ without an unacceptable false-positive rate against ordinary log vocabulary.
   ADR secret detection, not a general-purpose PII scrubber, which would be
   a substantially larger and statistically-driven tool in its own right.
 
+## Amendment (2026-09-25): credentials, and the ADR path
+
+A security audit demonstrated two gaps in the decision as originally
+implemented, both now closed in `pii_redaction.py`.
+
+**Credentials were not covered.** The audit captured a root password and an
+SSH passphrase out of a log line, stored verbatim and served back through
+the API — including into `normalized_template`, which the *list* endpoint
+returns, so it was on screen without opening a detail view. Credentials are
+not personal data, so Principle III does not strictly reach them; but this
+tool stores what it reads from files the user did not write, into a database
+that gets backed up and copied to colleagues. The same fixed-pattern
+heuristic now also replaces credential *values* (`password=`, `token=`,
+`api_key=`, provider-shaped keys such as `AKIA…`/`ghp_…`, credentials inside
+a URL, and the body of a PEM private-key block).
+
+Two deliberate limits: the key **name** is kept and only its value replaced,
+so the redacted line still tells an operator *what* to go and rotate; and
+patterns match an assignment rather than guessing at bare high-entropy
+strings, because a redactor that fires on ordinary log traffic destroys the
+feature it is protecting. Free-prose secrets ("the root pw is hunter2")
+still pass through — the same accepted limit as usernames above.
+
+**Redaction was applied on the log path only.** `AdrRecord.content` stored
+and served the entire raw Markdown of every imported ADR, so an ADR
+recording an incident carried its participants' emails, and a pasted private
+key was returned verbatim by `GET /api/adrs/{id}` — by the same endpoint
+that had already flagged it with `has_secret_warning`. ADR content now goes
+through the same redaction. The secret **check** deliberately still runs on
+the original text, so redaction cannot hide a leak from the warning that
+exists to report it, and the record itself is never withheld: per the ADR
+module's own principle, a secret warning is a flag, never a blocker.
+
 ## Links
 
 * [Constitution Principle III](../../.specify/memory/constitution.md)

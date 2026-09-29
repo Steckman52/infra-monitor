@@ -27,11 +27,24 @@ class DashboardSummary(BaseModel):
     adr_issues_count: int
     last_registry_scan_at: datetime | None
     last_log_scan_at: datetime | None
+    # The roots each scan last ran over, so the UI can offer them back
+    # instead of the user having to remember every path by hand.
+    last_registry_roots: list[str]
+    last_log_roots: list[str]
 
 
-def _last_run_at(session: Session, scan_type: str) -> datetime | None:
-    row = session.query(ScanMetadata).filter_by(scan_type=scan_type).one_or_none()
+def _metadata(session: Session, scan_type: str) -> ScanMetadata | None:
+    return session.query(ScanMetadata).filter_by(scan_type=scan_type).one_or_none()
+
+
+def _last_run_at(row: ScanMetadata | None) -> datetime | None:
     return row.last_run_at if row is not None else None
+
+
+def _last_roots(row: ScanMetadata | None) -> list[str]:
+    if row is None or not row.last_roots:
+        return []
+    return [line for line in row.last_roots.splitlines() if line]
 
 
 @router.get("/dashboard", response_model=DashboardSummary)
@@ -42,6 +55,8 @@ def get_dashboard(session: Session = Depends(get_session)) -> DashboardSummary:
     compatibility_risks_count = sum(
         1 for group in compute_compatibility(session) if group.status == "compatibility_risk"
     )
+    registry_meta = _metadata(session, "registry")
+    log_meta = _metadata(session, "log")
     adr_issues_count = session.query(AdrImportIssue).count() + (
         session.query(AdrRecord).filter(AdrRecord.has_secret_warning.is_(True)).count()
     )
@@ -54,6 +69,8 @@ def get_dashboard(session: Session = Depends(get_session)) -> DashboardSummary:
         log_scan_issues_count=session.query(LogScanIssue).count(),
         adrs_count=session.query(AdrRecord).count(),
         adr_issues_count=adr_issues_count,
-        last_registry_scan_at=_last_run_at(session, "registry"),
-        last_log_scan_at=_last_run_at(session, "log"),
+        last_registry_scan_at=_last_run_at(registry_meta),
+        last_log_scan_at=_last_run_at(log_meta),
+        last_registry_roots=_last_roots(registry_meta),
+        last_log_roots=_last_roots(log_meta),
     )

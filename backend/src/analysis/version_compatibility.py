@@ -25,6 +25,34 @@ def extract_major_version(declared_version: str | None) -> int | None:
     return int(match.group(1))
 
 
+_UPPER_BOUND_RE = re.compile(r"<=?\s*(\d+)")
+_LOWER_BOUND_RE = re.compile(r">=?\s*(\d+)")
+# Maven's open-ended range: `[1.0,)` admits every major from 1 upwards.
+_MAVEN_OPEN_RANGE_RE = re.compile(r"[\[(]\s*[\d.]+\s*,\s*[\])]")
+
+
+def _spans_multiple_majors(declared_version: str) -> bool:
+    """Whether this spec admits more than one major version.
+
+    Such a spec pins nothing, so comparing it to another version answers a
+    question it was never asked. `>=1.19` against `^2.0.0` was being called
+    a conflict when 2.x satisfies both -- a red row on the one page whose
+    entire job is telling you where migration effort is actually needed.
+    """
+    if "||" in declared_version:
+        return True
+    if _MAVEN_OPEN_RANGE_RE.search(declared_version):
+        return True
+
+    lower = _LOWER_BOUND_RE.search(declared_version)
+    upper = _UPPER_BOUND_RE.search(declared_version)
+    if lower and upper:
+        # A bounded range is comparable only while it stays inside one major
+        # (`[1.0,2.0)` admits 1.x alone; `>=1.0 <3.0` admits 1.x and 2.x).
+        return int(upper.group(1)) - int(lower.group(1)) > 1
+    return bool(lower) != bool(upper) and bool(lower or upper)
+
+
 def extract_effective_version(declared_version: str | None) -> tuple[int, ...] | None:
     """The unit two declared versions are actually compared on. Per SemVer's
     own rule (https://semver.org/#spec-item-4), while major is 0 the API is
@@ -37,19 +65,39 @@ def extract_effective_version(declared_version: str | None) -> tuple[int, ...] |
     if major is None:
         return None
     if major != 0:
+        if _spans_multiple_majors(declared_version):
+            # Not comparable rather than wrong: the tool cannot resolve a
+            # range without a per-ecosystem resolver, and a fabricated
+            # conflict costs more trust than an honest gap.
+            return None
         return (major,)
+    # A pre-1.0 package never leaves major 0, so a bound like `>=0.104` is a
+    # statement about the minor -- the very drift the 0.x rule exists to
+    # catch. Applying the range rule here would silence it.
     match = _MAJOR_MINOR_RE.match(declared_version)
     return (0, int(match.group(2))) if match else (0,)
 
 
-def status_for_majors(major_versions: list[int | None]) -> tuple[str, bool]:
-    """FR-005: status is 'compatible' when every comparable major matches
-    (vacuously true with zero or one comparable entries), or
-    'compatibility_risk' when at least two comparable majors differ.
-    `has_not_comparable` is tracked independently of that status.
+def status_for_majors(effective_versions: list[tuple[int, ...] | None]) -> tuple[str, bool]:
+    """FR-005: status is 'compatible' when every comparable version matches,
+    'compatibility_risk' when at least two comparable versions differ, and
+    'unknown' when not a single entry was comparable at all.
+
+    That last case is not a technicality. Real Maven modules declare almost
+    every version through a parent POM or dependencyManagement, so a whole
+    enterprise Java project can arrive here with nothing comparable in it.
+    Calling that "compatible" would be FR-004's "defaulting to compatible"
+    applied to an entire dependency -- a reassuring green row asserting
+    agreement between versions nobody has actually read.
+
+    `has_not_comparable` stays independent of the status: it flags that
+    *some* entry was unreadable, which is still worth showing alongside a
+    real compatible/risk verdict drawn from the rest.
     """
-    comparable = [m for m in major_versions if m is not None]
-    has_not_comparable = len(comparable) < len(major_versions)
+    comparable = [v for v in effective_versions if v is not None]
+    has_not_comparable = len(comparable) < len(effective_versions)
+    if not comparable:
+        return "unknown", has_not_comparable
     status = "compatible" if len(set(comparable)) <= 1 else "compatibility_risk"
     return status, has_not_comparable
 

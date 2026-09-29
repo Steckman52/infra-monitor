@@ -147,7 +147,12 @@ view and confirm both are visible without navigating elsewhere.
   comparable entry shares the same major version, "compatibility risk" when
   at least two comparable entries differ, and MUST separately flag the
   presence of any "not comparable" entries regardless of the compatible/risk
-  determination among the rest.
+  determination among the rest. When *no* entry is comparable, System MUST
+  mark the dependency "unknown" rather than "compatible": with nothing read,
+  there is no agreement to report, and calling it compatible would be FR-004's
+  prohibited "defaulting to compatible" applied to the whole dependency. This
+  is the normal case for Maven modules, which inherit nearly every version
+  from a parent POM or `dependencyManagement`.
 - **FR-006**: System MUST present a browsable view of all shared
   dependencies, each with its status and the list of contributing services
   with their declared versions.

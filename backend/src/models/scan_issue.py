@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db import Base
 
-ISSUE_TYPES = {"unparsable", "incomplete_data", "unreachable_path"}
+ISSUE_TYPES = {"unparsable", "incomplete_data", "unreachable_path", "scan_truncated"}
 
 
 class ScanIssue(Base):
@@ -23,7 +23,7 @@ class ScanIssue(Base):
     issue_type: Mapped[str] = mapped_column(String, nullable=False)
     reason: Mapped[str] = mapped_column(String, nullable=False)
     service_id: Mapped[int | None] = mapped_column(
-        ForeignKey("services.id", ondelete="CASCADE"), nullable=True
+        ForeignKey("services.id", ondelete="CASCADE"), index=True, nullable=True
     )
     detected_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 

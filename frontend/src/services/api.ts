@@ -81,7 +81,7 @@ export interface ScanIssue {
   id: number;
   manifest_path: string;
   repository_path: string;
-  issue_type: 'unparsable' | 'incomplete_data' | 'unreachable_path';
+  issue_type: 'unparsable' | 'incomplete_data' | 'unreachable_path' | 'scan_truncated';
   reason: string;
   service_id: number | null;
   detected_at: string;
@@ -105,7 +105,7 @@ export interface CompatibilityEntry {
 export interface CompatibilityGroup {
   name: string;
   ecosystem: string;
-  status: 'compatible' | 'compatibility_risk';
+  status: 'compatible' | 'compatibility_risk' | 'unknown';
   has_not_comparable: boolean;
   entries: CompatibilityEntry[];
 }
@@ -167,9 +167,40 @@ export interface DashboardSummary {
   adr_issues_count: number;
   last_registry_scan_at: string | null;
   last_log_scan_at: string | null;
+  last_registry_roots: string[];
+  last_log_roots: string[];
 }
 
-async function parseJsonOrThrow<T>(response: Response): Promise<T> {
+/**
+ * A failed `fetch` rejects with a bare `TypeError: Failed to fetch`, which
+ * is what the user was being shown verbatim when the backend was not
+ * running -- technically accurate and completely unactionable. The one
+ * cause that matters here is "the backend isn't up", so say that.
+ */
+export async function apiFetch(input: string, init?: RequestInit): Promise<Response> {
+  // Reads get a timeout so a wedged backend surfaces as a message instead of
+  // a spinner that never ends. Scans (POST) deliberately do not: they are
+  // bounded on the server by the directory cap and per-file size limits, and
+  // aborting the request would not stop the scan anyway -- it would only
+  // hide its result.
+  const isRead = !init?.method || init.method === 'GET';
+  const controller = isRead ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), READ_TIMEOUT_MS) : null;
+  try {
+    return await fetch(input, controller ? { ...init, signal: controller.signal } : init);
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new Error(`The backend did not answer within ${READ_TIMEOUT_MS / 1000} seconds.`);
+    }
+    throw new Error('Cannot reach the backend. Is it running on port 8000?');
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+const READ_TIMEOUT_MS = 20_000;
+
+export async function parseJsonOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
     let detail: string | undefined;
     try {
@@ -186,7 +217,7 @@ async function parseJsonOrThrow<T>(response: Response): Promise<T> {
 }
 
 export async function triggerScan(roots: string[]): Promise<ScanResponse> {
-  const response = await fetch('/api/scan', {
+  const response = await apiFetch('/api/scan', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ roots }),
@@ -195,32 +226,32 @@ export async function triggerScan(roots: string[]): Promise<ScanResponse> {
 }
 
 export async function listServices(): Promise<ServiceSummary[]> {
-  const response = await fetch('/api/services');
+  const response = await apiFetch('/api/services');
   return parseJsonOrThrow<ServiceSummary[]>(response);
 }
 
 export async function getServiceDetail(id: number): Promise<ServiceDetail> {
-  const response = await fetch(`/api/services/${id}`);
+  const response = await apiFetch(`/api/services/${id}`);
   return parseJsonOrThrow<ServiceDetail>(response);
 }
 
 export async function listScanIssues(): Promise<ScanIssue[]> {
-  const response = await fetch('/api/scan-issues');
+  const response = await apiFetch('/api/scan-issues');
   return parseJsonOrThrow<ScanIssue[]>(response);
 }
 
 export async function listCompatibility(): Promise<CompatibilityGroup[]> {
-  const response = await fetch('/api/dependency-compatibility');
+  const response = await apiFetch('/api/dependency-compatibility');
   return parseJsonOrThrow<CompatibilityGroup[]>(response);
 }
 
 export async function listConnections(): Promise<NodeConnections[]> {
-  const response = await fetch('/api/connections');
+  const response = await apiFetch('/api/connections');
   return parseJsonOrThrow<NodeConnections[]>(response);
 }
 
 export async function triggerLogScan(root: string): Promise<LogScanResponse> {
-  const response = await fetch('/api/log-scan', {
+  const response = await apiFetch('/api/log-scan', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ root }),
@@ -229,37 +260,37 @@ export async function triggerLogScan(root: string): Promise<LogScanResponse> {
 }
 
 export async function listErrorGroups(): Promise<ErrorGroupSummary[]> {
-  const response = await fetch('/api/error-groups');
+  const response = await apiFetch('/api/error-groups');
   return parseJsonOrThrow<ErrorGroupSummary[]>(response);
 }
 
 export async function getErrorGroupDetail(id: number): Promise<ErrorGroupDetail> {
-  const response = await fetch(`/api/error-groups/${id}`);
+  const response = await apiFetch(`/api/error-groups/${id}`);
   return parseJsonOrThrow<ErrorGroupDetail>(response);
 }
 
 export async function listLogScanIssues(): Promise<LogScanIssue[]> {
-  const response = await fetch('/api/log-scan-issues');
+  const response = await apiFetch('/api/log-scan-issues');
   return parseJsonOrThrow<LogScanIssue[]>(response);
 }
 
 export async function listAdrs(): Promise<AdrSummary[]> {
-  const response = await fetch('/api/adrs');
+  const response = await apiFetch('/api/adrs');
   return parseJsonOrThrow<AdrSummary[]>(response);
 }
 
 export async function getAdrDetail(id: number): Promise<AdrDetail> {
-  const response = await fetch(`/api/adrs/${id}`);
+  const response = await apiFetch(`/api/adrs/${id}`);
   return parseJsonOrThrow<AdrDetail>(response);
 }
 
 export async function listAdrIssues(): Promise<AdrIssue[]> {
-  const response = await fetch('/api/adr-issues');
+  const response = await apiFetch('/api/adr-issues');
   return parseJsonOrThrow<AdrIssue[]>(response);
 }
 
 export async function getDashboard(): Promise<DashboardSummary> {
-  const response = await fetch('/api/dashboard');
+  const response = await apiFetch('/api/dashboard');
   return parseJsonOrThrow<DashboardSummary>(response);
 }
 
@@ -268,6 +299,6 @@ export interface PickDirectoryResponse {
 }
 
 export async function pickDirectory(): Promise<PickDirectoryResponse> {
-  const response = await fetch('/api/pick-directory');
+  const response = await apiFetch('/api/pick-directory', { method: 'POST' });
   return parseJsonOrThrow<PickDirectoryResponse>(response);
 }

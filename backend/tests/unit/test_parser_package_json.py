@@ -68,6 +68,51 @@ def test_non_string_dependency_version_is_treated_as_not_declared(tmp_path):
     assert result.dependencies == [ParsedDependency(name="react", declared_version=None)]
 
 
+def test_dev_and_optional_dependencies_are_included(tmp_path):
+    # A frontend app whose every dependency is a devDependency previously
+    # registered as having none at all.
+    manifest = tmp_path / "package.json"
+    manifest.write_text(
+        """{
+          "private": true,
+          "devDependencies": {"vite": "^8.0.0", "tailwindcss": "^4.0.0"},
+          "optionalDependencies": {"fsevents": "^2.3.0"}
+        }""",
+        encoding="utf-8",
+    )
+
+    result = package_json.parse(manifest)
+
+    assert {d.name for d in result.dependencies} == {"vite", "tailwindcss", "fsevents"}
+
+
+def test_peer_dependencies_are_not_treated_as_own_dependencies(tmp_path):
+    manifest = tmp_path / "package.json"
+    manifest.write_text(
+        '{"name": "lib", "peerDependencies": {"react": "^19.0.0"}}', encoding="utf-8"
+    )
+
+    result = package_json.parse(manifest)
+
+    assert result.dependencies == []
+
+
+def test_package_listed_twice_keeps_the_runtime_version(tmp_path):
+    manifest = tmp_path / "package.json"
+    manifest.write_text(
+        """{
+          "name": "app",
+          "dependencies": {"typescript": "^5.0.0"},
+          "devDependencies": {"typescript": "^4.9.0"}
+        }""",
+        encoding="utf-8",
+    )
+
+    result = package_json.parse(manifest)
+
+    assert result.dependencies == [ParsedDependency(name="typescript", declared_version="^5.0.0")]
+
+
 def test_deeply_nested_json_raises_manifest_parse_error(tmp_path):
     # json.loads raises RecursionError (not JSONDecodeError) on pathologically
     # nested input -- previously uncaught, crashing the whole scan request.

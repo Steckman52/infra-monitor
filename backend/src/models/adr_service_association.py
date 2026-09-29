@@ -13,9 +13,9 @@ class AdrServiceAssociation(Base):
     __table_args__ = (UniqueConstraint("adr_id", "service_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    adr_id: Mapped[int] = mapped_column(ForeignKey("adr_records.id", ondelete="CASCADE"), nullable=False)
+    adr_id: Mapped[int] = mapped_column(ForeignKey("adr_records.id", ondelete="CASCADE"), index=True, nullable=False)
     service_id: Mapped[int] = mapped_column(
-        ForeignKey("services.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("services.id", ondelete="CASCADE"), index=True, nullable=False
     )
 
     adr = relationship("AdrRecord")

@@ -17,10 +17,16 @@ from src.models.service_connection import ServiceConnection
 from src.scanning import name_resolution
 from src.scanning.adr_relationships import resolve_relationships
 from src.scanning.adr_secrets import check_for_secrets
+from src.scanning.pii_redaction import redact_pii
 from src.scanning.connection_graph import build_graph_for_compose
 from src.scanning.parsed_manifest import ManifestParseError
 from src.scanning.parsers import adr_markdown, composer_json, docker_compose, go_mod, package_json, pom_xml, requirements_txt
-from src.scanning.walker import find_adr_files, find_docker_compose_files, find_manifests
+from src.scanning.walker import (
+    WalkTruncated,
+    find_adr_files,
+    find_docker_compose_files,
+    find_manifests,
+)
 
 _PARSERS = {
     "node": package_json.parse,
@@ -156,7 +162,12 @@ def _scan_adrs(adr_files: list[Path], now: datetime) -> tuple[list[AdrRecord], l
                 date=fields.date,
                 source_path=str(adr_path),
                 repository_path=repository_path,
-                content=fields.content,
+                # Principle III applies to every stored file content, not
+                # just log text: an ADR recording an incident routinely
+                # names the people involved. The secret check deliberately
+                # runs on the ORIGINAL text -- redaction must not hide a
+                # leaked credential from the warning that exists to flag it.
+                content=redact_pii(fields.content),
                 has_secret_warning=check_for_secrets(fields.content),
             )
         )
@@ -215,12 +226,25 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
             )
             continue
 
-        root_services, root_issues = _scan_manifests(root_path, existing_names, now)
-        services_to_add.extend(root_services)
-        issues_to_add.extend(root_issues)
+        try:
+            root_services, root_issues = _scan_manifests(root_path, existing_names, now)
+            services_to_add.extend(root_services)
+            issues_to_add.extend(root_issues)
 
-        compose_files.extend(find_docker_compose_files(root_path))
-        adr_files.extend(find_adr_files(root_path))
+            compose_files.extend(find_docker_compose_files(root_path))
+            adr_files.extend(find_adr_files(root_path))
+        except WalkTruncated as exc:
+            # Whatever was collected before the cap is kept -- a partial
+            # registry is useful, an unannounced partial one is not.
+            issues_to_add.append(
+                ScanIssue(
+                    manifest_path=root,
+                    repository_path=root,
+                    issue_type="scan_truncated",
+                    reason=str(exc),
+                    detected_at=now,
+                )
+            )
 
     # 002 FR-009: match docker-compose service blocks to the services just
     # scanned above by resolved build-context path (in-memory; these Service
@@ -237,6 +261,20 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     adrs_to_add, adr_issues_to_add = _scan_adrs(adr_files, now)
     relationships_to_add = resolve_relationships(adrs_to_add)
     associations_to_add = _resolve_adr_associations(adrs_to_add, services_to_add)
+
+    if roots and len(unreachable_roots) == len(roots):
+        # Every root was unreachable, so there is nothing to replace the
+        # registry WITH. Replacing it anyway would wipe the registry, the
+        # connection graph and every imported ADR because of a mistyped path,
+        # an unmounted network share, or a laptop off VPN -- and the scan
+        # roots are not persisted, so the user could not simply re-run it.
+        # A scan that found nothing is not evidence that nothing exists.
+        return ScanSummary(
+            services_found=0,
+            issues_found=len(issues_to_add),
+            unreachable_roots=unreachable_roots,
+            adrs_found=0,
+        )
 
     # Replace all prior scan results in one transaction. Children first, since
     # SQLite enforces FK constraints and bulk deletes bypass ORM cascades.
@@ -257,7 +295,7 @@ def run_scan(session: Session, roots: list[str]) -> ScanSummary:
     session.add_all(adr_issues_to_add)
     session.add_all(relationships_to_add)
     session.add_all(associations_to_add)
-    record_scan(session, "registry", now)
+    record_scan(session, "registry", now, roots=list(roots))
     session.commit()
 
     return ScanSummary(

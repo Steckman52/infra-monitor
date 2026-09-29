@@ -15,16 +15,16 @@ class ServiceConnection(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
     from_service_id: Mapped[int | None] = mapped_column(
-        ForeignKey("services.id", ondelete="CASCADE"), nullable=True
+        ForeignKey("services.id", ondelete="CASCADE"), index=True, nullable=True
     )
     from_external_node_id: Mapped[int | None] = mapped_column(
-        ForeignKey("external_nodes.id", ondelete="CASCADE"), nullable=True
+        ForeignKey("external_nodes.id", ondelete="CASCADE"), index=True, nullable=True
     )
     to_service_id: Mapped[int | None] = mapped_column(
-        ForeignKey("services.id", ondelete="CASCADE"), nullable=True
+        ForeignKey("services.id", ondelete="CASCADE"), index=True, nullable=True
     )
     to_external_node_id: Mapped[int | None] = mapped_column(
-        ForeignKey("external_nodes.id", ondelete="CASCADE"), nullable=True
+        ForeignKey("external_nodes.id", ondelete="CASCADE"), index=True, nullable=True
     )
     relationship_basis: Mapped[str] = mapped_column(String, nullable=False)
     source_compose_path: Mapped[str] = mapped_column(String, nullable=False)

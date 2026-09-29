@@ -5,6 +5,12 @@ interface CompatibilityTableProps {
   groups: CompatibilityGroup[];
 }
 
+const STATUS_TONE: Record<CompatibilityGroup['status'], string> = {
+  compatible: 'good',
+  compatibility_risk: 'warn',
+  unknown: 'unknown',
+};
+
 function CompatibilityTable({ groups }: CompatibilityTableProps) {
   const { t } = useLanguage();
 
@@ -30,10 +36,16 @@ function CompatibilityTable({ groups }: CompatibilityTableProps) {
               <span className="tag">{group.ecosystem}</span>
             </td>
             <td>
-              <span className={`status-inline ${group.status === 'compatible' ? 'good' : 'warn'}`}>
-                {group.status === 'compatible' ? t.compatibility.compatible : t.compatibility.compatibilityRisk}
+              <span className={`status-inline ${STATUS_TONE[group.status]}`}>
+                {group.status === 'compatible'
+                  ? t.compatibility.compatible
+                  : group.status === 'compatibility_risk'
+                    ? t.compatibility.compatibilityRisk
+                    : t.compatibility.unknown}
               </span>
-              {group.has_not_comparable && (
+              {/* Redundant once the status itself says nothing was readable --
+                  "some versions not comparable" would understate it. */}
+              {group.has_not_comparable && group.status !== 'unknown' && (
                 <span className="activity-meta"> ({t.compatibility.someNotComparable})</span>
               )}
             </td>

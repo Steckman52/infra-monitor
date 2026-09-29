@@ -28,6 +28,22 @@ def test_non_object_json_raises_manifest_parse_error(tmp_path):
         composer_json.parse(manifest)
 
 
+def test_require_dev_is_included_and_platform_constraints_are_not(tmp_path):
+    manifest = tmp_path / "composer.json"
+    manifest.write_text(
+        """{
+          "name": "example/app",
+          "require": {"php": ">=8.1", "ext-json": "*", "laravel/framework": "^11.0"},
+          "require-dev": {"phpunit/phpunit": "^11.0"}
+        }""",
+        encoding="utf-8",
+    )
+
+    result = composer_json.parse(manifest)
+
+    assert {d.name for d in result.dependencies} == {"laravel/framework", "phpunit/phpunit"}
+
+
 def test_require_not_an_object_raises_manifest_parse_error(tmp_path):
     manifest = tmp_path / "composer.json"
     manifest.write_text('{"name": "x", "require": ["not", "a", "dict"]}', encoding="utf-8")

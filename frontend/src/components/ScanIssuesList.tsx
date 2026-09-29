@@ -12,6 +12,7 @@ function ScanIssuesList({ issues }: ScanIssuesListProps) {
     unparsable: t.scanIssues.unparsable,
     incomplete_data: t.scanIssues.incompleteData,
     unreachable_path: t.scanIssues.unreachablePath,
+    scan_truncated: t.scanIssues.scanTruncated,
   };
 
   if (issues.length === 0) {

@@ -1,5 +1,6 @@
 import { useLanguage } from '../i18n/LanguageContext';
 import type { ErrorGroupSummary } from '../services/api';
+import { usePaged } from '../utils/paging';
 
 interface ErrorGroupsTableProps {
   groups: ErrorGroupSummary[];
@@ -9,12 +10,14 @@ interface ErrorGroupsTableProps {
 
 function ErrorGroupsTable({ groups, onSelectGroup, onSelectService }: ErrorGroupsTableProps) {
   const { t } = useLanguage();
+  const page = usePaged(groups);
 
   if (groups.length === 0) {
     return <p className="empty-state">{t.logs.empty}</p>;
   }
 
   return (
+    <>
     <table className="data-table">
       <thead>
         <tr>
@@ -26,7 +29,7 @@ function ErrorGroupsTable({ groups, onSelectGroup, onSelectService }: ErrorGroup
         </tr>
       </thead>
       <tbody>
-        {groups.map((group) => (
+        {page.visible.map((group) => (
           <tr key={group.id}>
             <td>
               {group.service_id !== null ? (
@@ -51,6 +54,14 @@ function ErrorGroupsTable({ groups, onSelectGroup, onSelectService }: ErrorGroup
         ))}
       </tbody>
     </table>
+    {page.hasMore && (
+      <div className="panel-body">
+        <button type="button" className="btn-secondary" onClick={page.showMore}>
+          {t.common.showMore(page.shown, page.total)}
+        </button>
+      </div>
+    )}
+    </>
   );
 }
 

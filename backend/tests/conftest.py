@@ -42,7 +42,11 @@ def client(db_engine):
             session.close()
 
     app.dependency_overrides[get_session] = override_get_session
-    with TestClient(app) as test_client:
+    # base_url matters: TrustedHostMiddleware rejects anything but
+    # localhost/127.0.0.1, and TestClient's default Host is "testserver".
+    # Using a real allowed host keeps that middleware on the tested path
+    # rather than configuring it away for tests.
+    with TestClient(app, base_url="http://localhost") as test_client:
         yield test_client
     app.dependency_overrides.clear()
 

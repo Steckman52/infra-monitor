@@ -721,6 +721,12 @@ table.data-table {
   color: var(--crit);
 }
 
+/* Deliberately muted, not green or amber: "we could not read these
+   versions" is an absence of a verdict, not a passing or failing one. */
+.status-inline.unknown {
+  color: var(--text-muted);
+}
+
 /* ---------------- activity / list rows ---------------- */
 
 .activity-row {
@@ -850,4 +856,18 @@ dl.detail-list dt {
 dl.detail-list dd {
   color: var(--text);
   overflow-wrap: anywhere;
+}
+
+/* A scan of a large tree is one long request with no progress events to
+   report, so the least the button can do is not look frozen. */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinning { animation: none; }
 }

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import ErrorGroupsTable from '../components/ErrorGroupsTable';
 import { useLanguage } from '../i18n/LanguageContext';
 import {
+  getDashboard,
   listErrorGroups,
   pickDirectory,
   triggerLogScan,
@@ -22,6 +23,9 @@ function LogsPage({ onSelectGroup, onSelectService, onViewLogScanIssues }: LogsP
   const [root, setRoot] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [isBrowsing, setIsBrowsing] = useState(false);
+  // Prevents the table claiming there are no errors while the first
+  // fetch is still in flight.
+  const [isLoading, setIsLoading] = useState(true);
   const [lastScanSummary, setLastScanSummary] = useState<LogScanResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,12 +36,24 @@ function LogsPage({ onSelectGroup, onSelectService, onViewLogScanIssues }: LogsP
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load error groups.');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     refreshGroups();
   }, [refreshGroups]);
+
+  useEffect(() => {
+    getDashboard()
+      .then(({ last_log_roots }) => {
+        if (last_log_roots.length > 0) setRoot((current) => current || last_log_roots[0]);
+      })
+      .catch(() => {
+        // Prefilling is a convenience, never a reason to show an error.
+      });
+  }, []);
 
   const handleScan = async () => {
     const trimmedRoot = root.trim();
@@ -93,8 +109,8 @@ function LogsPage({ onSelectGroup, onSelectService, onViewLogScanIssues }: LogsP
             {t.common.browse}
           </button>
           <button type="button" className="btn-primary" onClick={handleScan} disabled={isScanning}>
-            <RefreshCw />
-            {t.logs.scanBtn}
+            <RefreshCw className={isScanning ? 'spinning' : undefined} />
+            {isScanning ? t.common.scanning : t.logs.scanBtn}
           </button>
         </div>
         {lastScanSummary && (
@@ -113,7 +129,11 @@ function LogsPage({ onSelectGroup, onSelectService, onViewLogScanIssues }: LogsP
           </button>
         </div>
         <div className="panel">
-          <ErrorGroupsTable groups={groups} onSelectGroup={onSelectGroup} onSelectService={onSelectService} />
+          {isLoading ? (
+            <p className="loading-state">{t.common.loading}</p>
+          ) : (
+            <ErrorGroupsTable groups={groups} onSelectGroup={onSelectGroup} onSelectService={onSelectService} />
+          )}
         </div>
       </div>
     </>

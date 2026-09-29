@@ -1,17 +1,19 @@
 import re
 from pathlib import Path
 
-from src.scanning.parsed_manifest import ManifestParseError, ParsedDependency, ParsedManifest
+from src.scanning.parsed_manifest import (
+    ManifestParseError,
+    ParsedDependency,
+    ParsedManifest,
+    read_manifest_text,
+)
 
 _MODULE_RE = re.compile(r"^module\s+(\S+)")
 _REQUIRE_ENTRY_RE = re.compile(r"^(\S+)\s+(\S+)")
 
 
 def parse(path: Path) -> ParsedManifest:
-    try:
-        text = path.read_text(encoding="utf-8")
-    except (UnicodeDecodeError, OSError) as exc:
-        raise ManifestParseError(f"Cannot read file: {exc}") from exc
+    text = read_manifest_text(path)
 
     if not text.strip():
         raise ManifestParseError("file is empty")

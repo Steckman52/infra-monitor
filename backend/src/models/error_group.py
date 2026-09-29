@@ -14,7 +14,7 @@ class ErrorGroup(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     service_id: Mapped[int | None] = mapped_column(
-        ForeignKey("services.id", ondelete="CASCADE"), nullable=True
+        ForeignKey("services.id", ondelete="CASCADE"), index=True, nullable=True
     )
     unattributed_source_path: Mapped[str | None] = mapped_column(String, nullable=True)
     normalized_template: Mapped[str] = mapped_column(String, nullable=False)

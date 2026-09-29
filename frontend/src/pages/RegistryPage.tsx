@@ -1,7 +1,15 @@
 import { FolderOpen, RefreshCw, TriangleAlert } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
-import { listServices, pickDirectory, triggerScan, type ScanResponse, type ServiceSummary } from '../services/api';
+import {
+  getDashboard,
+  listServices,
+  pickDirectory,
+  triggerScan,
+  type ScanResponse,
+  type ServiceSummary,
+} from '../services/api';
+import { usePaged } from '../utils/paging';
 
 interface RegistryPageProps {
   onSelectService: (id: number) => void;
@@ -15,6 +23,10 @@ function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) 
   const [filterQuery, setFilterQuery] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [isBrowsing, setIsBrowsing] = useState(false);
+  // Without this the table renders "no services registered yet" during the
+  // very first fetch, actively telling the user their registry is empty
+  // while it is still being read.
+  const [isLoading, setIsLoading] = useState(true);
   const [lastScanSummary, setLastScanSummary] = useState<ScanResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,12 +37,29 @@ function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) 
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load services.');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     refreshServices();
   }, [refreshServices]);
+
+  // The roots used to live only in this component's state, so a refresh
+  // lost them and the user had to retype every path from memory.
+  useEffect(() => {
+    getDashboard()
+      .then(({ last_registry_roots }) => {
+        if (last_registry_roots.length > 0) {
+          setRootsInput((current) => current || last_registry_roots.join('\n'));
+        }
+      })
+      .catch(() => {
+        // Prefilling is a convenience; failing to do it must not surface
+        // an error over a page that otherwise loaded fine.
+      });
+  }, []);
 
   const handleScan = async () => {
     const roots = rootsInput
@@ -67,11 +96,20 @@ function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) 
   };
 
   const normalizedQuery = filterQuery.trim().toLowerCase();
-  const filteredServices = normalizedQuery
-    ? services.filter(
-        (s) => s.name.toLowerCase().includes(normalizedQuery) || s.ecosystem.toLowerCase().includes(normalizedQuery),
-      )
-    : services;
+  // Memoized, not recomputed per render: usePaged resets to the first page
+  // whenever its list changes identity, so a fresh array on every render
+  // would reset it on every click of "show more" while a filter is active.
+  const filteredServices = useMemo(
+    () =>
+      normalizedQuery
+        ? services.filter(
+            (s) =>
+              s.name.toLowerCase().includes(normalizedQuery) || s.ecosystem.toLowerCase().includes(normalizedQuery),
+          )
+        : services,
+    [services, normalizedQuery],
+  );
+  const page = usePaged(filteredServices);
 
   return (
     <>
@@ -97,8 +135,8 @@ function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) 
               {t.common.browse}
             </button>
             <button type="button" className="btn-primary" onClick={handleScan} disabled={isScanning}>
-              <RefreshCw />
-              {t.common.scan}
+              <RefreshCw className={isScanning ? 'spinning' : undefined} />
+              {isScanning ? t.common.scanning : t.common.scan}
             </button>
           </div>
           {lastScanSummary && (
@@ -134,7 +172,9 @@ function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) 
         />
 
         <div className="panel">
-          {filteredServices.length === 0 ? (
+          {isLoading ? (
+            <p className="loading-state">{t.common.loading}</p>
+          ) : filteredServices.length === 0 ? (
             <p className="empty-state">{t.registry.empty}</p>
           ) : (
             <table className="data-table">
@@ -146,7 +186,7 @@ function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) 
                 </tr>
               </thead>
               <tbody>
-                {filteredServices.map((service) => (
+                {page.visible.map((service) => (
                   <tr key={service.id} className="clickable" onClick={() => onSelectService(service.id)}>
                     <td className="cell-name">{service.name}</td>
                     <td>
@@ -161,6 +201,13 @@ function RegistryPage({ onSelectService, onViewScanIssues }: RegistryPageProps) 
                 ))}
               </tbody>
             </table>
+          )}
+          {!isLoading && page.hasMore && (
+            <div className="panel-body">
+              <button type="button" className="btn-secondary" onClick={page.showMore}>
+                {t.common.showMore(page.shown, page.total)}
+              </button>
+            </div>
           )}
         </div>
       </div>

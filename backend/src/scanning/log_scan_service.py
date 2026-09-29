@@ -4,6 +4,7 @@ from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from src import config
 from src.models.error_group import ErrorGroup
 from src.models.error_occurrence import ErrorOccurrence
 from src.models.log_scan_issue import LogScanIssue
@@ -15,6 +16,11 @@ from src.scanning.pii_redaction import redact_pii
 from src.scanning.walker import find_log_files
 
 MAX_STORED_OCCURRENCES_PER_GROUP = 20
+
+# Comfortably covers a day of a busy service's log while keeping the peak
+# cost of a single file bounded -- reading is whole-file, and splitlines()
+# doubles it, so the real ceiling is a few times this number.
+MAX_LOG_FILE_BYTES = config.MAX_LOG_FILE_MB * 1024 * 1024
 
 
 @dataclass
@@ -34,10 +40,11 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
     if not root_path.is_dir():
         # Mirrors run_scan's unreachable_roots handling (scan_service.py) --
         # a bad path is reported, not silently indistinguishable from "no
-        # errors found".
-        session.query(ErrorOccurrence).delete()
+        # errors found". The previously grouped errors are deliberately left
+        # in place: an unmounted share or a mistyped path is not evidence
+        # that the errors stopped happening, and discarding them would throw
+        # away the only copy the user has.
         session.query(LogScanIssue).delete()
-        session.query(ErrorGroup).delete()
         session.add(
             LogScanIssue(
                 path=root,
@@ -46,7 +53,6 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
                 detected_at=now,
             )
         )
-        record_scan(session, "log", now)
         session.commit()
         return LogScanSummary(error_groups_found=0, issues_found=1, root_unreachable=True)
 
@@ -75,8 +81,26 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
             )
 
         try:
+            size = log_path.stat().st_size
+            if size > MAX_LOG_FILE_BYTES:
+                # read_text() would materialise the whole file as one str and
+                # splitlines() a second copy of it, so a multi-GB rotated log
+                # costs several times its size in RAM and can take the process
+                # down. Skipping it visibly beats dying silently.
+                issues_to_add.append(
+                    LogScanIssue(
+                        path=str(log_path),
+                        issue_type="unreadable",
+                        reason=(
+                            f"File is {size // 1_000_000} MB, above the "
+                            f"{MAX_LOG_FILE_BYTES // 1_000_000} MB scan limit"
+                        ),
+                        detected_at=now,
+                    )
+                )
+                continue
             text = log_path.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError) as exc:
+        except (UnicodeDecodeError, OSError, MemoryError) as exc:
             # FR-014: isolate this file's failure, keep scanning the rest.
             issues_to_add.append(
                 LogScanIssue(path=str(log_path), issue_type="unreadable", reason=str(exc), detected_at=now)
@@ -89,10 +113,13 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
             # before anything derived from this entry is stored or grouped
             # (see docs/adr/0011-*.md) -- applied once here so the template,
             # the group's example, and every sampled occurrence all inherit it.
-            redacted_first_line = redact_pii(entry.first_line)
             redacted_raw_text = redact_pii(entry.raw_text)
-            template = normalize_template(redacted_first_line)
-            timestamp = extract_timestamp(entry.first_line)
+            # Template from the entry's *message*, not the whole physical
+            # line: for a JSON log line the line is the entire object, and
+            # templating that collapsed every entry in the file into one
+            # group keyed only on how many JSON keys it had.
+            template = normalize_template(redact_pii(entry.message))
+            timestamp = extract_timestamp(entry.first_line, entry.structured_timestamp)
             key = (service_id, unattributed_source_path, template)
 
             group = groups.setdefault(
@@ -156,7 +183,7 @@ def run_log_scan(session: Session, root: str) -> LogScanSummary:
     session.query(ErrorGroup).delete()
     session.add_all(error_groups_to_add)
     session.add_all(issues_to_add)
-    record_scan(session, "log", now)
+    record_scan(session, "log", now, roots=[root])
     session.commit()
 
     return LogScanSummary(

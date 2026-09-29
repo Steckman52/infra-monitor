@@ -36,3 +36,32 @@ def test_extract_major_version(declared_version, expected_major):
 )
 def test_extract_effective_version(declared_version, expected):
     assert extract_effective_version(declared_version) == expected
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        ">=1.19",           # the normal way to declare a dep in setup.py
+        ">=1.0.0 <3.0.0",   # spans two majors
+        "<2.0.0",
+        "[1.0,)",           # Maven, open-ended
+        "^1.0.0 || ^2.0.0", # npm OR range
+    ],
+)
+def test_a_spec_admitting_several_majors_is_not_comparable(spec):
+    # Such a spec pins nothing, so comparing it to a concrete version
+    # answers a question it was never asked -- and produced red
+    # "compatibility risk" rows for dependencies that resolve fine.
+    assert extract_effective_version(spec) is None
+
+
+@pytest.mark.parametrize(
+    "spec, expected",
+    [
+        ("[1.0,2.0)", (1,)),   # bounded inside one major: still comparable
+        ("^2.1.0", (2,)),
+        (">=0.104.0", (0, 104)),  # pre-1.0: the 0.x minor rule still applies
+    ],
+)
+def test_specs_that_do_pin_a_major_stay_comparable(spec, expected):
+    assert extract_effective_version(spec) == expected

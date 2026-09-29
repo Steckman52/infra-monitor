@@ -60,3 +60,29 @@ def test_rescan_replaces_prior_results(db_session, fixtures_dir):
 
     assert len(second_pass) == 1
     assert second_pass[0].ecosystem == "go"  # repo-node's service is gone (FR-014)
+
+
+def test_scan_where_every_root_is_unreachable_keeps_the_existing_registry(db_session, fixtures_dir):
+    # A mistyped path, an unmounted share, or a laptop off VPN must not
+    # destroy the registry: the scan roots are not persisted anywhere, so
+    # the user would have no way to rebuild what the wipe removed.
+    run_scan(db_session, [str(fixtures_dir / "repo-node")])
+    assert len(db_session.query(Service).all()) == 1
+
+    summary = run_scan(db_session, [str(fixtures_dir / "does-not-exist")])
+
+    assert summary.services_found == 0
+    assert summary.unreachable_roots  # the failure is still reported
+    assert len(db_session.query(Service).all()) == 1  # ...but nothing was destroyed
+
+
+def test_scan_with_one_reachable_root_still_replaces_as_usual(db_session, fixtures_dir):
+    # The guard above must not weaken normal replacement: a scan that
+    # reached at least one root is a real result and does replace.
+    run_scan(db_session, [str(fixtures_dir / "repo-node")])
+
+    run_scan(db_session, [str(fixtures_dir / "repo-go"), str(fixtures_dir / "does-not-exist")])
+
+    services = db_session.query(Service).all()
+    assert len(services) == 1
+    assert services[0].ecosystem == "go"

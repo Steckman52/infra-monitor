@@ -15,10 +15,10 @@ class AdrRelationship(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     from_adr_id: Mapped[int] = mapped_column(
-        ForeignKey("adr_records.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("adr_records.id", ondelete="CASCADE"), index=True, nullable=False
     )
     to_adr_id: Mapped[int] = mapped_column(
-        ForeignKey("adr_records.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("adr_records.id", ondelete="CASCADE"), index=True, nullable=False
     )
     relationship_type: Mapped[str] = mapped_column(String, nullable=False)
 

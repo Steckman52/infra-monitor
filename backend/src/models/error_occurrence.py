@@ -14,7 +14,7 @@ class ErrorOccurrence(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     error_group_id: Mapped[int] = mapped_column(
-        ForeignKey("error_groups.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("error_groups.id", ondelete="CASCADE"), index=True, nullable=False
     )
     raw_text: Mapped[str] = mapped_column(String, nullable=False)
     occurred_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from src.scanning.parsed_manifest import ManifestParseError
+from src.scanning.parsed_manifest import ManifestParseError, read_manifest_text
 
 
 @dataclass
@@ -29,6 +29,15 @@ def _resolve_build_context(build_value, compose_dir: Path) -> Path | None:
             return None
     else:
         return None
+    if not isinstance(context_str, str):
+        return None
+    if "${" in context_str:
+        # An uninterpolated variable cannot name a real directory, and
+        # resolving it produced a path containing the literal `${APP_DIR}`
+        # that matched no scanned repository -- so the compose block was
+        # silently never linked to the service it describes. Better to
+        # report no context than a context that cannot exist.
+        return None
     return (compose_dir / context_str).resolve()
 
 
@@ -46,7 +55,7 @@ def _normalize_names(value) -> list[str]:
 
 def parse(path: Path) -> ParsedCompose:
     try:
-        text = path.read_text(encoding="utf-8")
+        text = read_manifest_text(path)
         if not text.strip():
             raise ValueError("file is empty")
         data = yaml.safe_load(text)
@@ -55,6 +64,18 @@ def parse(path: Path) -> ParsedCompose:
 
     if not isinstance(data, dict):
         raise ManifestParseError("docker-compose.yml does not contain a mapping")
+
+    if "services" not in data:
+        # Compose v1 put the service names at the top level with no
+        # `services:` key. Such a file parses as perfectly valid YAML, so it
+        # used to yield zero services and no issue at all -- the repository
+        # simply looked as though it had no container topology. Reporting it
+        # is the honest outcome; v1 has been unsupported by Compose itself
+        # for years, so parsing it is not worth the ambiguity.
+        raise ManifestParseError(
+            "No 'services:' key -- this looks like the obsolete Compose v1 "
+            "format, which is not supported"
+        )
 
     services_raw = data.get("services") or {}
     if not isinstance(services_raw, dict):
